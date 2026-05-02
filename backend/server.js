@@ -2,8 +2,6 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') }
 
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
 
 const { runExpander } = require('./agents/expander');
 const { runDigger } = require('./agents/digger');
@@ -13,6 +11,13 @@ const { runPattern } = require('./agents/pattern');
 const { runSynthesis } = require('./agents/synthesis');
 const { runBuilder, EMPTY_PLAN } = require('./agents/builder');
 const { storeIdeaResult, getGraphStats } = require('./lib/backboard');
+const {
+  DEMO_BUILD_DELAY_MS,
+  DEMO_SEARCH_DELAY_MS,
+  getDemoBuildPlan,
+  getDemoSearchResult,
+  isDemoIdea,
+} = require('./lib/demo-fixture');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -26,6 +31,10 @@ const EMPTY_RESEARCH_QUALITY = {
 
 app.use(cors());
 app.use(express.json());
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function withTimeout(promise, ms, fallback, label = 'task') {
   let timeoutId;
@@ -45,7 +54,7 @@ function withTimeout(promise, ms, fallback, label = 'task') {
   ]).finally(() => {
     clearTimeout(timeoutId);
     if (!timedOut) {
-      // success path — nothing to log
+      // success path - nothing to log
     }
   });
 }
@@ -75,6 +84,13 @@ app.post('/api/search', async (req, res) => {
   }
 
   const ideaText = idea.trim();
+
+  if (isDemoIdea(ideaText)) {
+    console.log(`[search] using curated demo fixture for "${ideaText}"`);
+    await sleep(DEMO_SEARCH_DELAY_MS);
+    return res.json(getDemoSearchResult());
+  }
+
   let partialResult = buildSearchResult(ideaText);
 
   console.log(`[search] start "${ideaText}"`);
@@ -178,7 +194,7 @@ app.post('/api/search', async (req, res) => {
           research_quality: diggerResult.research_quality,
         }), 5000, null, 'memory_store');
 
-        console.log(`[search] done in ${Date.now() - searchStart}ms — ${timeline.length} timeline / ${competitors.length} competitors`);
+        console.log(`[search] done in ${Date.now() - searchStart}ms - ${timeline.length} timeline / ${competitors.length} competitors`);
         return partialResult;
       })(),
       new Promise((resolve) => setTimeout(() => {
@@ -214,6 +230,12 @@ app.post('/api/build', async (req, res) => {
     return res.status(400).json({ error: 'idea is required' });
   }
 
+  if (isDemoIdea(idea)) {
+    console.log(`[build] using curated demo fixture for "${idea.trim()}"`);
+    await sleep(DEMO_BUILD_DELAY_MS);
+    return res.json({ idea: idea.trim(), plan: getDemoBuildPlan() });
+  }
+
   try {
     const plan = await withTimeout(
       runBuilder(idea.trim(), {
@@ -244,35 +266,7 @@ app.get('/api/graph/stats', async (req, res) => {
 });
 
 app.get('/api/demo', (req, res) => {
-  // This endpoint returns a cached JSON result for "mental health journaling app"
-  // Populate backend/cache/demo.json by running the search once and saving the result
-  const demoPath = path.join(__dirname, 'cache', 'demo.json');
-  try {
-    if (fs.existsSync(demoPath)) {
-      const data = fs.readFileSync(demoPath, 'utf-8');
-      const parsed = JSON.parse(data);
-      if (parsed && Object.keys(parsed).length > 0) {
-        return res.json(parsed);
-      }
-    }
-  } catch {
-    // Fall through to fallback
-  }
-
-  // Fallback if demo.json is empty or missing
-  res.json({
-    idea: 'mental health journaling app',
-    timeline: [],
-    turn_sentence: 'Demo data not yet populated. Run a search for "mental health journaling app" and save the result to backend/cache/demo.json.',
-    competitors: [],
-    gap: 'Run the search once to populate this demo cache.',
-    clock: 'Demo mode.',
-    sources: [],
-    research_quality: EMPTY_RESEARCH_QUALITY,
-    data_quality_note: 'demo cache empty',
-    pattern_confidence: 'insufficient_data',
-    graph_size: 0,
-  });
+  res.json(getDemoSearchResult());
 });
 
 app.listen(PORT, () => {
