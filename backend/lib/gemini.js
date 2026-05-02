@@ -1,71 +1,70 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const { sendBackboardMessage } = require('./backboard');
 
 function safeParseJSON(text) {
   if (!text) return null;
   try {
     let cleaned = text.trim();
-    // Strip markdown code fences
     cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '');
     cleaned = cleaned.trim();
     return JSON.parse(cleaned);
   } catch {
+    try {
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      if (start >= 0 && end > start) {
+        return JSON.parse(text.slice(start, end + 1));
+      }
+    } catch {
+      // fall through
+    }
     return null;
   }
 }
 
-async function callWithRetry(fn, retries = 3) {
-  for (let attempt = 0; attempt < retries; attempt++) {
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withRetries(fn, retries = 2) {
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       return await fn();
     } catch (err) {
-      const isRateLimit =
-        err?.status === 429 ||
-        err?.message?.includes('429') ||
-        err?.message?.toLowerCase()?.includes('rate limit') ||
-        err?.message?.toLowerCase()?.includes('resource exhausted');
-      if (isRateLimit && attempt < retries - 1) {
-        const delay = Math.pow(2, attempt) * 1000;
-        await new Promise((r) => setTimeout(r, delay));
-        continue;
+      lastError = err;
+      if (attempt < retries) {
+        await sleep(500 * 2 ** attempt);
       }
-      throw err;
     }
   }
+  throw lastError;
 }
 
-async function searchAndReason(prompt, systemPrompt) {
-  return callWithRetry(async () => {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      tools: [{ googleSearch: {} }],
-    });
-
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-    });
-
-    const response = result.response;
-    return response.text();
-  });
+async function searchAndReason(prompt, systemPrompt, options = {}) {
+  return withRetries(() =>
+    sendBackboardMessage(
+      `${systemPrompt}\n\n${prompt}`,
+      {
+        webSearch: true,
+        memory: 'Readonly',
+        timeoutMs: options.timeoutMs || 60000,
+      }
+    )
+  );
 }
 
-async function reasonOnly(prompt, systemPrompt) {
-  return callWithRetry(async () => {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-    });
-
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-    });
-
-    const response = result.response;
-    return response.text();
-  });
+async function reasonOnly(prompt, systemPrompt, options = {}) {
+  return withRetries(() =>
+    sendBackboardMessage(
+      `${systemPrompt}\n\n${prompt}`,
+      {
+        webSearch: false,
+        memory: options.memory || 'off',
+        jsonOutput: true,
+        timeoutMs: options.timeoutMs || 60000,
+      }
+    )
+  );
 }
 
 module.exports = { searchAndReason, reasonOnly, safeParseJSON };

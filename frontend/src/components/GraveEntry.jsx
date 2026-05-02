@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react';
+import SourceLinks from './SourceLinks';
 
 export default function GraveEntry({ entry, showInscription }) {
   const entryRef = useRef(null);
@@ -20,9 +21,10 @@ export default function GraveEntry({ entry, showInscription }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'baseline',
+          gap: '16px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: 0 }}>
           <span
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
@@ -46,6 +48,7 @@ export default function GraveEntry({ entry, showInscription }) {
               fontFamily: "'IBM Plex Sans', sans-serif",
               fontSize: '1rem',
               color: 'var(--text-primary)',
+              overflowWrap: 'anywhere',
             }}
           >
             {entry.title}
@@ -57,6 +60,7 @@ export default function GraveEntry({ entry, showInscription }) {
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: '0.7rem',
               color: 'var(--alive)',
+              flex: '0 0 auto',
             }}
           >
             [alive]
@@ -82,6 +86,7 @@ export default function GraveEntry({ entry, showInscription }) {
               fontSize: '0.8rem',
               color: 'var(--text-secondary)',
               marginBottom: '4px',
+              overflowWrap: 'anywhere',
             }}
           >
             {entry.what_was_built}
@@ -93,28 +98,13 @@ export default function GraveEntry({ entry, showInscription }) {
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: '0.8rem',
               color: 'var(--text-faint)',
+              overflowWrap: 'anywhere',
             }}
           >
             {entry.confidence === 'low' ? '~' : ''}Died: {entry.cause_of_death}
           </p>
         )}
-        {entry.source_url && (
-          <a
-            href={entry.source_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: '0.7rem',
-              color: 'var(--accent)',
-              textDecoration: 'none',
-              display: 'inline-block',
-              marginTop: '4px',
-            }}
-          >
-            source
-          </a>
-        )}
+        <SourceLinks sources={entry.sources} fallbackUrl={entry.source_url} />
       </div>
     </div>
   );

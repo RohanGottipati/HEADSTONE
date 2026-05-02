@@ -5,24 +5,52 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
+const { runExpander } = require('./agents/expander');
 const { runDigger } = require('./agents/digger');
 const { runHistorian } = require('./agents/historian');
 const { runLandscape } = require('./agents/landscape');
 const { runPattern } = require('./agents/pattern');
 const { runSynthesis } = require('./agents/synthesis');
-const { storeIdeaResult } = require('./lib/backboard');
+const { storeIdeaResult, getGraphStats } = require('./lib/backboard');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const EMPTY_RESEARCH_QUALITY = {
+  evidence_count: 0,
+  distinct_domains: 0,
+  source_types: [],
+  coverage_note: 'No reliable public evidence was found for this idea.',
+  missing_categories: ['hackathon', 'repository', 'live_product', 'failure_signal'],
+};
 
 app.use(cors());
 app.use(express.json());
 
 function withTimeout(promise, ms, fallback) {
+  let timeoutId;
   return Promise.race([
-    promise,
-    new Promise((resolve) => setTimeout(() => resolve(fallback), ms)),
-  ]);
+    Promise.resolve(promise).catch(() => fallback),
+    new Promise((resolve) => {
+      timeoutId = setTimeout(() => resolve(fallback), ms);
+    }),
+  ]).finally(() => clearTimeout(timeoutId));
+}
+
+function buildSearchResult(idea, overrides = {}) {
+  return {
+    idea,
+    timeline: [],
+    turn_sentence: 'Not enough data to identify a pattern.',
+    competitors: [],
+    gap: 'No gap analysis is available yet.',
+    clock: 'Timing unavailable.',
+    sources: [],
+    research_quality: EMPTY_RESEARCH_QUALITY,
+    data_quality_note: '',
+    pattern_confidence: 'insufficient_data',
+    graph_size: 0,
+    ...overrides,
+  };
 }
 
 app.post('/api/search', async (req, res) => {
@@ -32,38 +60,56 @@ app.post('/api/search', async (req, res) => {
     return res.status(400).json({ error: 'idea is required' });
   }
 
-  const overallTimeout = setTimeout(() => {
-    // Safety net — handled by Promise.race below
-  }, 120000);
+  const ideaText = idea.trim();
+  let partialResult = buildSearchResult(ideaText);
 
   try {
     const result = await Promise.race([
       (async () => {
-        // Step 1: Digger first
+        // Step 1: Expand the idea into search angles, then dig deeply.
+        const expansion = await withTimeout(runExpander(ideaText), 30000, null);
         const diggerResult = await withTimeout(
-          runDigger(idea.trim()),
-          30000,
-          { devpost_results: [], github_results: [], live_products: [], web_signals: [] }
+          runDigger(ideaText, expansion || {}),
+          105000,
+          {
+            devpost_results: [],
+            github_results: [],
+            live_products: [],
+            web_signals: [],
+            sources: [],
+            research_quality: EMPTY_RESEARCH_QUALITY,
+            search_queries: [],
+          }
         );
 
         // Step 2: Historian + Landscape in parallel
         const [historianResult, landscapeResult] = await Promise.all([
           withTimeout(
-            runHistorian(idea.trim(), diggerResult),
-            30000,
+            runHistorian(ideaText, diggerResult),
+            60000,
             { timeline: [], data_quality_note: 'timeout' }
           ),
           withTimeout(
-            runLandscape(idea.trim(), diggerResult.live_products),
-            30000,
+            runLandscape(ideaText, diggerResult),
+            60000,
             { competitors: [] }
           ),
         ]);
+        const timeline = Array.isArray(historianResult?.timeline) ? historianResult.timeline : [];
+        const competitors = Array.isArray(landscapeResult?.competitors) ? landscapeResult.competitors : [];
+
+        partialResult = buildSearchResult(ideaText, {
+          timeline,
+          competitors,
+          sources: diggerResult.sources,
+          research_quality: diggerResult.research_quality,
+          data_quality_note: historianResult.data_quality_note || '',
+        });
 
         // Step 3: Pattern
         const patternResult = await withTimeout(
-          runPattern(idea.trim(), historianResult),
-          30000,
+          runPattern(ideaText, historianResult),
+          45000,
           {
             turn_sentence: 'Not enough data to identify a pattern.',
             recurring_failure: '',
@@ -73,62 +119,65 @@ app.post('/api/search', async (req, res) => {
           }
         );
 
+        partialResult = buildSearchResult(ideaText, {
+          timeline,
+          turn_sentence: patternResult.turn_sentence,
+          competitors,
+          sources: diggerResult.sources,
+          research_quality: diggerResult.research_quality,
+          data_quality_note: historianResult.data_quality_note || '',
+          pattern_confidence: patternResult.pattern_confidence,
+          graph_size: patternResult.graph_size,
+        });
+
         // Step 4: Synthesis
         const synthesisResult = await withTimeout(
-          runSynthesis(idea.trim(), historianResult, landscapeResult, patternResult),
-          30000,
+          runSynthesis(ideaText, historianResult, landscapeResult, patternResult, diggerResult),
+          45000,
           { gap: 'Analysis timed out.', clock: 'Timing unavailable.' }
         );
 
-        // Store in Backboard (fire and forget)
-        storeIdeaResult(idea.trim(), {
-          timeline: historianResult.timeline,
+        partialResult = buildSearchResult(ideaText, {
+          timeline,
           turn_sentence: patternResult.turn_sentence,
-          gap: synthesisResult.gap,
-        }).catch(() => {});
-
-        return {
-          idea: idea.trim(),
-          timeline: historianResult.timeline,
-          turn_sentence: patternResult.turn_sentence,
-          competitors: landscapeResult.competitors,
+          competitors,
           gap: synthesisResult.gap,
           clock: synthesisResult.clock,
+          sources: diggerResult.sources,
+          research_quality: diggerResult.research_quality,
+          data_quality_note: historianResult.data_quality_note || '',
           pattern_confidence: patternResult.pattern_confidence,
           graph_size: patternResult.graph_size,
-        };
+        });
+
+        await withTimeout(storeIdeaResult(ideaText, {
+          timeline,
+          turn_sentence: patternResult.turn_sentence,
+          gap: synthesisResult.gap,
+          competitors,
+          sources: diggerResult.sources,
+          research_quality: diggerResult.research_quality,
+        }), 5000, null);
+
+        return partialResult;
       })(),
-      new Promise((resolve) =>
-        setTimeout(
-          () =>
-            resolve({
-              idea: idea.trim(),
-              timeline: [],
-              turn_sentence: 'Search timed out before patterns could be identified.',
-              competitors: [],
-              gap: 'The search timed out. Try again with a more specific idea.',
-              clock: 'Timing unavailable.',
-              pattern_confidence: 'insufficient_data',
-              graph_size: 0,
-            }),
-          120000
-        )
-      ),
+      new Promise((resolve) => setTimeout(() => resolve(partialResult), 180000)),
     ]);
 
-    clearTimeout(overallTimeout);
     res.json(result);
   } catch (err) {
-    clearTimeout(overallTimeout);
     console.error('Search error:', err);
     res.status(500).json({
       error: 'Internal server error',
-      idea: idea.trim(),
+      idea: ideaText,
       timeline: [],
       turn_sentence: 'An error occurred during research.',
       competitors: [],
       gap: 'Unable to complete the analysis.',
       clock: 'Timing unavailable.',
+      sources: [],
+      research_quality: EMPTY_RESEARCH_QUALITY,
+      data_quality_note: 'pipeline error',
       pattern_confidence: 'insufficient_data',
       graph_size: 0,
     });
@@ -137,12 +186,7 @@ app.post('/api/search', async (req, res) => {
 
 app.get('/api/graph/stats', async (req, res) => {
   try {
-    const { queryAdjacentIdeas } = require('./lib/backboard');
-    const data = await queryAdjacentIdeas('');
-    res.json({
-      total_ideas_searched: data.graph_size || 0,
-      unique_failure_patterns: 0,
-    });
+    res.json(await getGraphStats());
   } catch {
     res.json({ total_ideas_searched: 0, unique_failure_patterns: 0 });
   }
@@ -172,6 +216,9 @@ app.get('/api/demo', (req, res) => {
     competitors: [],
     gap: 'Run the search once to populate this demo cache.',
     clock: 'Demo mode.',
+    sources: [],
+    research_quality: EMPTY_RESEARCH_QUALITY,
+    data_quality_note: 'demo cache empty',
     pattern_confidence: 'insufficient_data',
     graph_size: 0,
   });

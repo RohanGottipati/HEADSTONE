@@ -1,8 +1,14 @@
 const { reasonOnly, safeParseJSON } = require('../lib/gemini');
 const { SYNTHESIS_PROMPT } = require('../lib/prompts');
 
-async function runSynthesis(idea, historianResult, landscapeResult, patternResult) {
+async function runSynthesis(idea, historianResult, landscapeResult, patternResult, diggerResult = {}) {
   const prompt = `The idea is: "${idea}"
+
+Research quality:
+${JSON.stringify(diggerResult?.research_quality || {}, null, 2)}
+
+Top supporting sources:
+${JSON.stringify((diggerResult?.sources || []).slice(0, 12), null, 2)}
 
 Timeline of attempts:
 ${JSON.stringify(historianResult?.timeline || [], null, 2)}

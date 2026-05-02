@@ -17,7 +17,7 @@ export function useHeadstone() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idea }),
-        signal: AbortSignal.timeout(120000),
+        signal: AbortSignal.timeout(195000),
       });
 
       if (!response.ok) {

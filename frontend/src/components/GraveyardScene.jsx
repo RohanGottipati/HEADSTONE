@@ -6,6 +6,7 @@ import LivingSection from './LivingSection';
 import GapSection from './GapSection';
 import ClockLine from './ClockLine';
 import FinalStone from './FinalStone';
+import ResearchQuality from './ResearchQuality';
 
 export default function GraveyardScene({ data }) {
   const revealed = useNarrativeReveal(data);
@@ -63,8 +64,12 @@ export default function GraveyardScene({ data }) {
       <div style={{ height: '80px' }} />
 
       <div ref={turnRef}>
-        <TurnLine sentence={data.turn_sentence} visible={revealed.turnLine} />
+        <TurnLine sentence={data.turn_sentence} visible={revealed.turnLine} patternConfidence={data.pattern_confidence} />
       </div>
+
+      <div style={{ height: '40px' }} />
+
+      <ResearchQuality quality={data.research_quality} visible={revealed.turnLine} />
 
       <div style={{ height: '60px' }} />
 

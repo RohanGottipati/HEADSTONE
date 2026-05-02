@@ -1,3 +1,5 @@
+import SourceLinks from './SourceLinks';
+
 export default function LivingSection({ competitors, visible }) {
   if (!competitors || competitors.length === 0) return null;
 
@@ -28,6 +30,7 @@ export default function LivingSection({ competitors, visible }) {
             alignItems: 'baseline',
             gap: '8px',
             flexWrap: 'wrap',
+            minWidth: 0,
           }}
         >
           <span
@@ -35,6 +38,7 @@ export default function LivingSection({ competitors, visible }) {
               fontFamily: "'IBM Plex Sans', sans-serif",
               fontSize: '0.9rem',
               color: 'var(--text-primary)',
+              overflowWrap: 'anywhere',
             }}
           >
             {c.name}
@@ -60,11 +64,17 @@ export default function LivingSection({ competitors, visible }) {
                 fontSize: '0.85rem',
                 color: 'var(--text-secondary)',
                 fontStyle: 'italic',
+                flex: '1 1 180px',
+                minWidth: 0,
+                overflowWrap: 'anywhere',
               }}
             >
               {c.weakness}
             </span>
           )}
+          <div style={{ flexBasis: '100%', marginLeft: 0 }}>
+            <SourceLinks sources={c.sources} />
+          </div>
         </div>
       ))}
     </div>
