@@ -1,8 +1,8 @@
-# HEADSTONE
+# Scout
 
 > Every idea has a history. Most of it is buried.
 
-HEADSTONE researches the history of your hackathon idea and presents it as a three-act narrative experience. Type an idea, wait, and walk through the graveyard of everyone who tried it before you.
+Scout researches the history of your hackathon idea and presents it as a three-act narrative experience. Type an idea, wait, and walk through the graveyard of everyone who tried it before you.
 
 ## How It Works
 
