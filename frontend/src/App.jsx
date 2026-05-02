@@ -3,6 +3,7 @@ import { ResultsProvider } from './context/ResultsContext';
 import PageNav from './components/PageNav';
 import CoverPage from './pages/CoverPage';
 import NotebookPage from './pages/NotebookPage';
+import BuildPlanPage from './pages/BuildPlanPage';
 
 function ChromeLayout({ children }) {
   const location = useLocation();
@@ -26,7 +27,7 @@ export default function App() {
             <Route path="/results" element={<NotebookPage />} />
             <Route path="/products" element={<NotebookPage />} />
             <Route path="/product/:idx" element={<NotebookPage />} />
-            <Route path="/build" element={<NotebookPage />} />
+            <Route path="/build" element={<BuildPlanPage />} />
             <Route path="*" element={<CoverPage />} />
           </Routes>
         </ChromeLayout>

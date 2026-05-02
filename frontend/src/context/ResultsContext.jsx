@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-const STORAGE_KEY = 'headstone:lastResult';
-const PLAN_STORAGE_KEY = 'headstone:lastPlan';
+const STORAGE_KEY = 'scout:lastResult';
+const PLAN_STORAGE_KEY = 'scout:lastPlan';
 
 const ResultsContext = createContext(null);
 

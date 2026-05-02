@@ -4,9 +4,9 @@ const path = require('path');
 const BACKBOARD_URL = (process.env.BACKBOARD_URL || 'https://app.backboard.io/api').replace(/\/$/, '');
 const BACKBOARD_API_KEY = process.env.BACKBOARD_API_KEY || '';
 const ASSISTANT_ID_FILE = path.join(__dirname, '..', 'cache', 'assistant_id.txt');
-const ASSISTANT_NAME = 'HEADSTONE Idea Graveyard';
+const ASSISTANT_NAME = 'SCOUT Idea Archive';
 const ASSISTANT_INSTRUCTIONS =
-  'You are the AI research and persistent memory layer for HEADSTONE - a system that researches the history of hackathon ideas. ' +
+  'You are the AI research and persistent memory layer for SCOUT - a system that researches the history of hackathon ideas. ' +
   'When asked for research, use current web evidence, be skeptical, cite real public sources in structured fields, and never fabricate facts. ' +
   'When memories are recalled, surface failure signals from semantically adjacent ideas.';
 

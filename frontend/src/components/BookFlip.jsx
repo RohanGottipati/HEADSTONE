@@ -362,7 +362,6 @@ function buildArchivePage(data, timeline, pageNumber) {
     ['sources indexed', quality.evidence_count || rawSources.length || timeline.length],
     ['domains checked', quality.distinct_domains || 0],
     ['pattern confidence', toTitleCase(data.pattern_confidence || 'unknown')],
-    ['memory graph', `${data.graph_size || 0} linked ideas`],
   ];
 
   const clippingHtml = clippings.length
@@ -406,97 +405,6 @@ function buildArchivePage(data, timeline, pageNumber) {
           </div>
           <p style="${DISPLAY}font-size:0.96rem;font-style:italic;line-height:1.55;color:${C.pageText};margin-top:18px;">The dead leave more evidence than the living.</p>
         </div>
-      </div>
-      <div style="${pageNumCSS()}">${pageNumber}</div>
-    </div>`;
-}
-
-function buildMemoryGraphPage(data, timeline, pageNumber) {
-  const cx = 235;
-  const cy = 148;
-  const attempts = timeline.slice(0, 8);
-  const patternTexts = timeline
-    .flatMap((entry) => [...(entry.did_wrong || []), entry.cause_of_death || entry.project_lacks || ''])
-    .map((item) => shorten(item, 34))
-    .filter(Boolean)
-    .slice(0, 4);
-  const patterns = (patternTexts.length ? patternTexts : ['No re-engagement', 'Distribution gap', 'Retention cliff', 'Thin evidence']).slice(0, 4);
-  const nodes = [{ id: 'center', label: 'Your idea', type: 'center', x: cx, y: cy, r: 11 }];
-
-  attempts.forEach((entry, index) => {
-    const angle = (index / Math.max(attempts.length, 1)) * Math.PI * 2 - Math.PI / 2;
-    const dist = entry.is_alive ? 82 : 104;
-    nodes.push({
-      id: `t${index}`,
-      label: entry.title || `Attempt ${index + 1}`,
-      year: entry.year,
-      type: entry.is_alive ? 'alive' : 'dead',
-      x: Math.round(cx + Math.cos(angle) * dist),
-      y: Math.round(cy + Math.sin(angle) * dist),
-      r: entry.is_alive ? 6 : 5,
-    });
-  });
-
-  patterns.forEach((label, index) => {
-    const coords = [
-      [82, 64],
-      [388, 70],
-      [88, 235],
-      [376, 228],
-    ][index];
-    nodes.push({ id: `p${index}`, label, type: 'pattern', x: coords[0], y: coords[1], r: 7 });
-  });
-
-  const colorMap = {
-    center: C.accent,
-    alive: C.green,
-    dead: C.brown,
-    pattern: C.red,
-  };
-
-  const links = [
-    ...attempts.map((_, index) => ['center', `t${index}`, false]),
-    ...attempts.slice(0, patterns.length).map((_, index) => [`t${index}`, `p${index % patterns.length}`, true]),
-  ];
-
-  const lines = links
-    .map(([source, target, dashed]) => {
-      const s = nodes.find((node) => node.id === source);
-      const t = nodes.find((node) => node.id === target);
-      if (!s || !t) return '';
-      return `<line x1="${s.x}" y1="${s.y}" x2="${t.x}" y2="${t.y}" stroke="${dashed ? 'rgba(139,32,32,0.28)' : 'rgba(106,90,72,0.28)'}" stroke-width="${dashed ? 1.2 : 0.9}" ${dashed ? 'stroke-dasharray="4 4"' : ''} />`;
-    })
-    .join('');
-
-  const circles = nodes
-    .map(
-      (node) => `
-        <g>
-          <circle cx="${node.x}" cy="${node.y}" r="${node.r}" fill="${colorMap[node.type]}" opacity="${node.type === 'center' ? 1 : 0.78}" />
-          <text x="${node.x}" y="${node.type === 'pattern' || node.type === 'center' ? node.y + node.r + 11 : node.y - node.r - 5}" text-anchor="middle" font-size="${node.type === 'center' ? 8 : 7}" font-family="IBM Plex Mono, monospace" fill="${colorMap[node.type]}" opacity="0.82">${escapeHtml(shorten(node.type === 'alive' || node.type === 'dead' ? node.year || node.label : node.label, 22))}</text>
-        </g>`
-    )
-    .join('');
-
-  return `
-    <div style="${pageCSS('padding:34px 30px;background-image:none;background:linear-gradient(180deg,#f5ead6 0%,#f0e3c8 100%);')}">
-      ${sectionLabel('Chapter IV')}
-      <div style="${DISPLAY}font-size:1.58rem;font-weight:700;line-height:1.14;color:${C.pageText};margin-bottom:10px;">The pattern under the pages</div>
-      <p style="${BASE}font-size:0.76rem;line-height:1.7;color:${C.pageMuted};max-width:410px;margin-bottom:8px;">Repeated failures connect across the archive. The shape matters more than any single product.</p>
-      <div style="position:relative;flex:1;min-height:0;border:1px solid rgba(180,155,110,0.28);background:rgba(255,250,240,0.24);overflow:hidden;">
-        <svg width="100%" height="100%" viewBox="0 0 470 295" preserveAspectRatio="xMidYMid meet">
-          ${lines}
-          ${circles}
-        </svg>
-      </div>
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;padding-top:10px;">
-        <div style="${MONO}font-size:0.56rem;letter-spacing:0.12em;text-transform:uppercase;color:${C.pageMuted};">
-          <span style="color:${C.accent};">●</span> idea &nbsp;
-          <span style="color:${C.green};">●</span> alive &nbsp;
-          <span style="color:${C.brown};">●</span> dead &nbsp;
-          <span style="color:${C.red};">●</span> pattern
-        </div>
-        <div style="${MONO}font-size:0.56rem;letter-spacing:0.12em;text-transform:uppercase;color:${C.pageMuted};">${data.graph_size || nodes.length} ideas in memory</div>
       </div>
       <div style="${pageNumCSS()}">${pageNumber}</div>
     </div>`;
@@ -1017,7 +925,6 @@ function buildStoryPages(data, { plan = null, planState = 'idle', planError = nu
 
   pages.push({ id: 'living-market', label: 'Living market', html: buildCompetitorsPage(data.competitors || [], logicalPage++) });
   pages.push({ id: 'pattern', label: 'Pattern', html: buildPatternPage(data, timeline, logicalPage++) });
-  pages.push({ id: 'memory', label: 'Memory graph', html: buildMemoryGraphPage(data, timeline, logicalPage++) });
   pages.push({ id: 'gap', label: 'Gap', html: buildGapPage(data, logicalPage++) });
   pages.push({ id: 'chapter', label: 'Your chapter', html: buildFinalChapterPage(data, timeline, logicalPage++) });
 

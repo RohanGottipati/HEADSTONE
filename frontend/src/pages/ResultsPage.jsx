@@ -20,14 +20,19 @@ export default function ResultsPage() {
 
   return (
     <div
+      className="notebook-page"
       style={{
         minHeight: '100vh',
         background:
-          'radial-gradient(circle at top, rgba(196,79,40,0.12), transparent 32%), linear-gradient(180deg, #fbf4eb 0%, #f8efe3 40%, #fefbf6 100%)',
+          'radial-gradient(ellipse at 50% 18%, rgba(200,168,74,0.1), transparent 42%), linear-gradient(180deg, #0e0c0a 0%, #130d07 52%, #090706 100%)',
         padding: '42px 24px 84px',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+      <div className="desk-surface notebook-page__desk" aria-hidden="true" />
+      <div className="candle-light" aria-hidden="true" />
+      <div style={{ maxWidth: '1120px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <header style={{ marginBottom: '30px', textAlign: 'center' }}>
           <p
             style={{
@@ -35,7 +40,7 @@ export default function ResultsPage() {
               fontSize: '0.68rem',
               letterSpacing: '0.22em',
               textTransform: 'uppercase',
-              color: '#8d7b62',
+              color: 'rgba(200,168,74,0.48)',
               marginBottom: '14px',
             }}
           >
@@ -45,22 +50,23 @@ export default function ResultsPage() {
             style={{
               fontFamily: "'Manrope', sans-serif",
               fontSize: 'clamp(2.1rem, 4vw, 3.6rem)',
-              lineHeight: 1.02,
-              letterSpacing: '-0.04em',
-              color: '#1c1208',
+              lineHeight: 1.04,
+              letterSpacing: 0,
+              color: '#f4e7ce',
               fontWeight: 800,
               maxWidth: '760px',
               margin: '0 auto 16px',
+              overflowWrap: 'anywhere',
             }}
           >
-            Flip through the documented history of “{data.idea}”
+            The Idea Archive
           </h1>
           <p
             style={{
               fontFamily: "'Manrope', sans-serif",
               fontSize: '1rem',
               lineHeight: 1.8,
-              color: '#6f5f49',
+              color: 'rgba(245,234,214,0.62)',
               maxWidth: '760px',
               margin: '0 auto',
             }}
@@ -83,6 +89,8 @@ export default function ResultsPage() {
           gap: '12px',
           justifyContent: 'center',
           flexWrap: 'wrap',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         <Link
@@ -92,10 +100,10 @@ export default function ResultsPage() {
             fontSize: '0.75rem',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
-            color: '#6f5f49',
+            color: 'var(--text-secondary)',
             textDecoration: 'none',
-            border: '1px solid rgba(28,18,8,0.12)',
-            background: 'rgba(255,255,255,0.62)',
+            border: '1px solid var(--border)',
+            background: 'rgba(20,14,6,0.62)',
             padding: '10px 16px',
             borderRadius: '999px',
           }}
@@ -109,10 +117,10 @@ export default function ResultsPage() {
             fontSize: '0.75rem',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
-            color: '#6f5f49',
+            color: 'var(--text-secondary)',
             textDecoration: 'none',
-            border: '1px solid rgba(28,18,8,0.12)',
-            background: 'rgba(255,255,255,0.62)',
+            border: '1px solid var(--border)',
+            background: 'rgba(20,14,6,0.62)',
             padding: '10px 16px',
             borderRadius: '999px',
           }}
@@ -126,8 +134,8 @@ export default function ResultsPage() {
             fontSize: '0.75rem',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
-            color: '#fffaf4',
-            background: '#c44f28',
+            color: '#20170d',
+            background: 'var(--accent)',
             textDecoration: 'none',
             padding: '10px 16px',
             borderRadius: '999px',

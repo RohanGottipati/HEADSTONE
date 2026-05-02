@@ -19,7 +19,7 @@ export default function ProductsPage() {
         padding: '60px 24px 100px',
       }}
     >
-      <header style={{ marginBottom: '40px' }}>
+      <header style={{ marginBottom: '40px', textAlign: 'center' }}>
         <p
           style={{
             fontFamily: "'IBM Plex Mono', monospace",

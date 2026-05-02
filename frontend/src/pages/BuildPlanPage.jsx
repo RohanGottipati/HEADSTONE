@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useResults } from '../context/ResultsContext';
 
-const STORAGE_NOTES_KEY = 'headstone:planNotes';
+const STORAGE_NOTES_KEY = 'scout:planNotes';
 
 const sectionTitle = {
   fontFamily: "'IBM Plex Mono', monospace",
@@ -437,7 +437,7 @@ export default function BuildPlanPage() {
         padding: '60px 24px 100px',
       }}
     >
-      <header style={{ marginBottom: '40px' }}>
+      <header style={{ marginBottom: '40px', textAlign: 'center' }}>
         <p
           style={{
             fontFamily: "'IBM Plex Mono', monospace",

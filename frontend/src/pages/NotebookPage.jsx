@@ -4,7 +4,7 @@ import { useResults } from '../context/ResultsContext';
 import BookFlip from '../components/BookFlip';
 import LoadingState from '../components/LoadingState';
 
-const STORAGE_NOTES_KEY = 'headstone:planNotes';
+const STORAGE_NOTES_KEY = 'scout:planNotes';
 
 function loadNotes(idea) {
   if (typeof window === 'undefined') return '';
@@ -63,7 +63,7 @@ function getRouteMeta({ pathname, data, timeline, productIndex, plan }) {
 
   return {
     eyebrow: 'The notebook of the idea',
-    title: `Flip through the documented history of "${data.idea}"`,
+    title: 'The Idea Archive',
     body: `${timeline.length} documented attempt${timeline.length === 1 ? '' : 's'} across ${span}. Each page shows what shipped, what made it different, why it survived or failed, and what it left behind for the next builder.`,
   };
 }

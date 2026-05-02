@@ -1,5 +1,5 @@
 const { searchAndReason, safeParseJSON } = require('../lib/gemini');
-const { DIGGER_PROMPT } = require('../lib/prompts');
+const { RESEARCHER_PROMPT } = require('../lib/prompts');
 const { buildResearchQuality, needsMoreEvidence, normalizeEvidence } = require('../lib/evidence');
 
 function listTerms(terms = [], fallback = '') {
@@ -118,7 +118,7 @@ ${spec.query}
 Target evidence category: ${spec.label}
 
 Find 4-8 real public sources. Prioritize primary sources and diverse domains. Return only the JSON shape from the system prompt.`,
-    DIGGER_PROMPT,
+    RESEARCHER_PROMPT,
     { timeoutMs: 70000 }
   );
   const parsed = safeParseJSON(raw);
