@@ -58,7 +58,7 @@ export default function PageNav() {
             letterSpacing: '0.1em',
           }}
         >
-          HEADSTONE
+          SCOUT
         </Link>
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
           {NAV.map((item) => {

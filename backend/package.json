@@ -1,7 +1,7 @@
 {
-  "name": "headstone-backend",
+  "name": "scout-backend",
   "version": "1.0.0",
-  "description": "HEADSTONE backend — hackathon idea graveyard research engine",
+  "description": "SCOUT backend — hackathon idea research engine",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

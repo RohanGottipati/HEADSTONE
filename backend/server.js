@@ -276,5 +276,5 @@ app.get('/api/demo', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`HEADSTONE backend running on port ${PORT}`);
+  console.log(`SCOUT backend running on port ${PORT}`);
 });

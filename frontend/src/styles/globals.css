@@ -150,6 +150,7 @@ body {
 
 .cover-page__copy {
   max-width: 560px;
+  text-align: center;
 }
 
 .cover-page__eyebrow {
@@ -163,7 +164,7 @@ body {
 
 .cover-page__copy h1 {
   max-width: 520px;
-  margin-bottom: 24px;
+  margin: 0 auto 24px;
   color: #f4e7ce;
   font-family: 'Playfair Display', serif;
   font-size: clamp(3rem, 7vw, 6rem);
@@ -174,6 +175,7 @@ body {
 
 .cover-page__copy p:last-child {
   max-width: 470px;
+  margin: 0 auto;
   color: rgba(245, 234, 214, 0.66);
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 1rem;

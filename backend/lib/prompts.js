@@ -13,7 +13,7 @@ Return as:
 
 Keep each array to 3-6 items. Do not include URLs.`;
 
-const DIGGER_PROMPT = `You are a deep web research agent. Your job is to find real public evidence about projects, hackathon submissions, startups, products, launches, repos, shutdowns, pivots, and postmortems related to a given idea.
+const RESEARCHER_PROMPT = `You are a deep web research agent. Your job is to find real public evidence about projects, hackathon submissions, startups, products, launches, repos, shutdowns, pivots, and postmortems related to a given idea.
 
 For each result you find, extract:
 - title: the name of the project/product
@@ -181,7 +181,7 @@ No markdown fences. No additional fields.
 
 module.exports = {
   EXPANDER_PROMPT,
-  DIGGER_PROMPT,
+  RESEARCHER_PROMPT,
   HISTORIAN_PROMPT,
   LANDSCAPE_PROMPT,
   PATTERN_PROMPT,
