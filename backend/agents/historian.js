@@ -13,6 +13,14 @@ function formatEvidenceList(sources = []) {
     .join('\n');
 }
 
+function cleanBulletList(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter(Boolean)
+    .slice(0, 3);
+}
+
 function enrichTimelineEntry(entry, sources) {
   const explicitIds = Array.isArray(entry.source_ids) ? entry.source_ids : [];
   const ids = sourceIdsFromIndexes(explicitIds, sources);
@@ -23,6 +31,10 @@ function enrichTimelineEntry(entry, sources) {
     year: Number(entry.year) || 0,
     title: entry.title || 'Unknown attempt',
     what_was_built: entry.what_was_built || '',
+    what_made_it_different: entry.what_made_it_different || '',
+    did_right: cleanBulletList(entry.did_right),
+    did_wrong: cleanBulletList(entry.did_wrong),
+    lesson: entry.lesson || '',
     how_far: entry.how_far || 'unknown',
     cause_of_death: entry.cause_of_death || 'no public record of continuation',
     source_url: sourceUrl,

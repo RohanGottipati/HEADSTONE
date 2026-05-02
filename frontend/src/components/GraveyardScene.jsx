@@ -10,6 +10,9 @@ import ResearchQuality from './ResearchQuality';
 
 export default function GraveyardScene({ data }) {
   const revealed = useNarrativeReveal(data);
+  const sortedTimeline = (data.timeline || [])
+    .slice()
+    .sort((a, b) => (a.year || 0) - (b.year || 0));
 
   const turnRef = useRef(null);
   const livingRef = useRef(null);
@@ -56,7 +59,7 @@ export default function GraveyardScene({ data }) {
       }}
     >
       <GraveNames
-        timeline={data.timeline}
+        timeline={sortedTimeline}
         showNames={revealed.graveNames}
         inscriptions={revealed.inscriptions}
       />

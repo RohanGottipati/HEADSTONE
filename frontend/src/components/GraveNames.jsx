@@ -22,6 +22,7 @@ export default function GraveNames({ timeline, showNames, inscriptions }) {
         <GraveEntry
           key={i}
           entry={entry}
+          index={i}
           showInscription={inscriptions[i] || false}
         />
       ))}

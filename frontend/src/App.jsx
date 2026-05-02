@@ -1,41 +1,36 @@
-import { useHeadstone } from './hooks/useHeadstone';
-import SearchInput from './components/SearchInput';
-import LoadingState from './components/LoadingState';
-import GraveyardScene from './components/GraveyardScene';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { ResultsProvider } from './context/ResultsContext';
+import PageNav from './components/PageNav';
+import CoverPage from './pages/CoverPage';
+import NotebookPage from './pages/NotebookPage';
+
+function ChromeLayout({ children }) {
+  const location = useLocation();
+  const hideNav = location.pathname === '/';
+
+  return (
+    <>
+      {!hideNav && <PageNav />}
+      {children}
+    </>
+  );
+}
 
 export default function App() {
-  const { search, state, data, error } = useHeadstone();
-
-  if (state === 'idle' || state === 'error') {
-    return (
-      <div>
-        <SearchInput onSearch={search} />
-        {state === 'error' && (
-          <div
-            style={{
-              position: 'fixed',
-              bottom: '2rem',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: '0.8rem',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            {error}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (state === 'loading') {
-    return <LoadingState />;
-  }
-
-  if (state === 'complete' && data) {
-    return <GraveyardScene data={data} />;
-  }
-
-  return null;
+  return (
+    <BrowserRouter>
+      <ResultsProvider>
+        <ChromeLayout>
+          <Routes>
+            <Route path="/" element={<CoverPage />} />
+            <Route path="/results" element={<NotebookPage />} />
+            <Route path="/products" element={<NotebookPage />} />
+            <Route path="/product/:idx" element={<NotebookPage />} />
+            <Route path="/build" element={<NotebookPage />} />
+            <Route path="*" element={<CoverPage />} />
+          </Routes>
+        </ChromeLayout>
+      </ResultsProvider>
+    </BrowserRouter>
+  );
 }

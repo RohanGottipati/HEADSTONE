@@ -55,8 +55,12 @@ You will receive a numbered evidence list with stable source IDs like src_1. Use
 For each timeline entry extract:
 - year: number (the year this project was active)
 - title: string (the project/product name)
-- what_was_built: string (one sentence describing what they built)
-- how_far: "won" | "placed" | "abandoned" | "unknown" (how far did this project get?)
+- what_was_built: string (one sentence describing what they actually shipped)
+- what_made_it_different: string (one short phrase naming the angle that set it apart from prior attempts. e.g. "first to use voice journaling", "free + open source", "AI summaries of weekly mood")
+- did_right: array of 1-3 short bullets describing the smart choices, traction, or innovations of this attempt. Be concrete (e.g. "shipped a working iOS app in 3 weeks", "got 12k organic signups in launch week"). Empty array if unknown.
+- did_wrong: array of 1-3 short bullets describing the specific mistakes or weaknesses that hurt them. Be concrete (e.g. "no notification system, day-4 retention was 12%", "monetized too early, churn spiked"). Empty array if unknown.
+- lesson: string (one sentence — the single most important takeaway a builder should remember from this attempt. Empty string if unknown.)
+- how_far: "won" | "placed" | "shipped" | "abandoned" | "unknown" (how far did this project get?)
 - cause_of_death: string (be SPECIFIC — not "team moved on" but WHY they stopped. e.g. "day-4 retention was 12%, team graduated and nobody maintained it")
 - source_url: string (a real URL if available, empty string if not)
 - source_ids: array of supporting source IDs, strongest first
@@ -64,13 +68,13 @@ For each timeline entry extract:
 - confidence: "high" | "medium" | "low"
 
 If cause of death is unknown, use: "no public record of continuation"
-Never fabricate specific facts or source IDs. If you're uncertain, set confidence to "low".
+Never fabricate specific facts or source IDs. If you're uncertain, set confidence to "low" and leave did_right / did_wrong / lesson empty rather than guessing.
 
 Order results chronologically by year.
 
 Return as:
 {
-  "timeline": [{ "year": 0, "title": "", "what_was_built": "", "how_far": "abandoned", "cause_of_death": "", "source_url": "", "source_ids": [], "is_alive": false, "confidence": "medium" }],
+  "timeline": [{ "year": 0, "title": "", "what_was_built": "", "what_made_it_different": "", "did_right": [], "did_wrong": [], "lesson": "", "how_far": "abandoned", "cause_of_death": "", "source_url": "", "source_ids": [], "is_alive": false, "confidence": "medium" }],
   "data_quality_note": "string describing data quality"
 }`;
 
@@ -115,6 +119,44 @@ Return ONLY valid JSON, no markdown fences:
   "pattern_confidence": "high | medium | low | insufficient_data"
 }`;
 
+const BUILDER_PROMPT = `You are a build-plan agent. Your job is to take everything the research pipeline has gathered about an idea — the timeline of past attempts, what each one did right and wrong, the live competitors, the recurring failure pattern, and the open gap — and produce a concrete, iterable build plan for the next attempt.
+
+The plan must explicitly:
+1. Cherry-pick the best ideas from prior attempts (so the builder copies what worked).
+2. Name the specific mistakes to avoid (so the builder does NOT repeat them).
+3. Define a focused MVP, a v1, and a moat.
+4. Be opinionated, specific, and ground every recommendation in a referenced past attempt or competitor when possible.
+
+Return ONLY valid JSON, no markdown fences. No additional fields beyond the schema below.
+
+Schema:
+{
+  "headline": "one short sentence that names the wedge for this build",
+  "positioning": "one sentence describing how this product is positioned relative to live competitors and dead attempts",
+  "borrow_from_winners": [
+    { "feature": "short name of the feature or pattern to borrow", "why": "one sentence explaining why it worked", "source": "name of the past attempt or competitor it comes from" }
+  ],
+  "avoid_from_losers": [
+    { "mistake": "short name of the mistake to avoid", "why": "one sentence explaining the failure mode it caused", "source": "name of the past attempt where this killed them" }
+  ],
+  "mvp": {
+    "summary": "one sentence describing the smallest thing worth shipping",
+    "must_have_features": ["3-5 short bullets describing the non-negotiable features"],
+    "explicitly_not_in_mvp": ["2-4 bullets describing tempting features to defer so you stay focused"],
+    "first_user_test": "one sentence describing the very first test that proves the wedge works"
+  },
+  "v1_features": [
+    { "feature": "feature name", "why": "one sentence on why it matters after MVP", "inspired_by": "optional: name of a past attempt or competitor" }
+  ],
+  "moat": "one sentence describing what makes this hard to copy once it works",
+  "risks": [
+    { "risk": "short name of the risk", "mitigation": "one sentence on how to defuse it" }
+  ],
+  "next_three_steps": ["exactly 3 concrete actions to do this week"]
+}
+
+Be specific. Avoid generic startup advice. If a section truly cannot be filled from the evidence, return an empty array or empty string rather than fabricating.`;
+
 const SYNTHESIS_PROMPT = `You are a synthesis agent. Given all research about a hackathon idea — its history, competitors, and failure patterns — write two things:
 
 1. "gap": One paragraph (no bullet points, no headers) describing what opportunity still exists. Write it for a person who is about to spend their weekend building this. Be specific and actionable. Do not be generic.
@@ -138,4 +180,5 @@ module.exports = {
   LANDSCAPE_PROMPT,
   PATTERN_PROMPT,
   SYNTHESIS_PROMPT,
+  BUILDER_PROMPT,
 };

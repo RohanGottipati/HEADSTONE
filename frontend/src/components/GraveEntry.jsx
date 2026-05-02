@@ -1,7 +1,57 @@
 import { useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import SourceLinks from './SourceLinks';
 
-export default function GraveEntry({ entry, showInscription }) {
+const monoLabel = {
+  fontFamily: "'IBM Plex Mono', monospace",
+  fontSize: '0.62rem',
+  letterSpacing: '0.14em',
+  textTransform: 'uppercase',
+  color: 'var(--text-faint)',
+  marginBottom: '4px',
+};
+
+const bodyText = {
+  fontFamily: "'IBM Plex Sans', sans-serif",
+  fontSize: '0.85rem',
+  color: 'var(--text-secondary)',
+  lineHeight: 1.55,
+  overflowWrap: 'anywhere',
+};
+
+function MiniBullets({ items, color }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+      {items.map((item, i) => (
+        <li
+          key={i}
+          style={{
+            ...bodyText,
+            display: 'flex',
+            gap: '8px',
+            alignItems: 'flex-start',
+            marginBottom: '4px',
+          }}
+        >
+          <span
+            style={{
+              width: '4px',
+              height: '4px',
+              borderRadius: '50%',
+              background: color,
+              marginTop: '8px',
+              flexShrink: 0,
+            }}
+          />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export default function GraveEntry({ entry, showInscription, index }) {
   const entryRef = useRef(null);
 
   useEffect(() => {
@@ -10,12 +60,13 @@ export default function GraveEntry({ entry, showInscription }) {
     }
   }, [showInscription]);
 
+  const detailLink = typeof index === 'number' ? `/product/${index}` : null;
+
   return (
     <div
       ref={entryRef}
       style={{ marginBottom: showInscription ? '24px' : '12px' }}
     >
-      {/* Name row */}
       <div
         style={{
           display: 'flex',
@@ -43,16 +94,32 @@ export default function GraveEntry({ entry, showInscription }) {
           >
             &middot;
           </span>
-          <span
-            style={{
-              fontFamily: "'IBM Plex Sans', sans-serif",
-              fontSize: '1rem',
-              color: 'var(--text-primary)',
-              overflowWrap: 'anywhere',
-            }}
-          >
-            {entry.title}
-          </span>
+          {detailLink ? (
+            <Link
+              to={detailLink}
+              style={{
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontSize: '1rem',
+                color: 'var(--text-primary)',
+                overflowWrap: 'anywhere',
+                textDecoration: 'none',
+                borderBottom: '1px dotted var(--text-faint)',
+              }}
+            >
+              {entry.title}
+            </Link>
+          ) : (
+            <span
+              style={{
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontSize: '1rem',
+                color: 'var(--text-primary)',
+                overflowWrap: 'anywhere',
+              }}
+            >
+              {entry.title}
+            </span>
+          )}
         </div>
         {entry.is_alive && (
           <span
@@ -68,43 +135,62 @@ export default function GraveEntry({ entry, showInscription }) {
         )}
       </div>
 
-      {/* Inscription */}
       <div
         style={{
           opacity: showInscription ? 1 : 0,
-          maxHeight: showInscription ? '200px' : '0',
+          maxHeight: showInscription ? '600px' : '0',
           overflow: 'hidden',
           transition: 'opacity 600ms ease, max-height 600ms ease',
           paddingLeft: '2rem',
-          marginTop: showInscription ? '4px' : '0',
+          marginTop: showInscription ? '8px' : '0',
         }}
       >
         {entry.what_was_built && (
-          <p
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: '0.8rem',
-              color: 'var(--text-secondary)',
-              marginBottom: '4px',
-              overflowWrap: 'anywhere',
-            }}
-          >
-            {entry.what_was_built}
-          </p>
+          <div style={{ marginBottom: '10px' }}>
+            <p style={monoLabel}>What it was</p>
+            <p style={bodyText}>{entry.what_was_built}</p>
+          </div>
         )}
+
+        {entry.did_right && entry.did_right.length > 0 && (
+          <div style={{ marginBottom: '10px' }}>
+            <p style={monoLabel}>Got right</p>
+            <MiniBullets items={entry.did_right} color="var(--alive)" />
+          </div>
+        )}
+
+        {entry.did_wrong && entry.did_wrong.length > 0 && (
+          <div style={{ marginBottom: '10px' }}>
+            <p style={monoLabel}>Got wrong</p>
+            <MiniBullets items={entry.did_wrong} color="#a85050" />
+          </div>
+        )}
+
         {!entry.is_alive && entry.cause_of_death && (
-          <p
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: '0.8rem',
-              color: 'var(--text-faint)',
-              overflowWrap: 'anywhere',
-            }}
-          >
+          <p style={{ ...bodyText, color: 'var(--text-faint)', marginBottom: '8px' }}>
             {entry.confidence === 'low' ? '~' : ''}Died: {entry.cause_of_death}
           </p>
         )}
+
         <SourceLinks sources={entry.sources} fallbackUrl={entry.source_url} />
+
+        {detailLink && (
+          <Link
+            to={detailLink}
+            style={{
+              display: 'inline-block',
+              marginTop: '10px',
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: '0.65rem',
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              color: 'var(--accent)',
+              textDecoration: 'none',
+            }}
+          >
+            Read this page →
+          </Link>
+        )}
       </div>
     </div>
   );

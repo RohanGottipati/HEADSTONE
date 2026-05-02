@@ -11,6 +11,7 @@ const { runHistorian } = require('./agents/historian');
 const { runLandscape } = require('./agents/landscape');
 const { runPattern } = require('./agents/pattern');
 const { runSynthesis } = require('./agents/synthesis');
+const { runBuilder, EMPTY_PLAN } = require('./agents/builder');
 const { storeIdeaResult, getGraphStats } = require('./lib/backboard');
 
 const app = express();
@@ -26,14 +27,27 @@ const EMPTY_RESEARCH_QUALITY = {
 app.use(cors());
 app.use(express.json());
 
-function withTimeout(promise, ms, fallback) {
+function withTimeout(promise, ms, fallback, label = 'task') {
   let timeoutId;
+  let timedOut = false;
   return Promise.race([
-    Promise.resolve(promise).catch(() => fallback),
-    new Promise((resolve) => {
-      timeoutId = setTimeout(() => resolve(fallback), ms);
+    Promise.resolve(promise).catch((err) => {
+      console.error(`[${label}] failed:`, err && err.message ? err.message : err);
+      return fallback;
     }),
-  ]).finally(() => clearTimeout(timeoutId));
+    new Promise((resolve) => {
+      timeoutId = setTimeout(() => {
+        timedOut = true;
+        console.error(`[${label}] timed out after ${ms}ms`);
+        resolve(fallback);
+      }, ms);
+    }),
+  ]).finally(() => {
+    clearTimeout(timeoutId);
+    if (!timedOut) {
+      // success path — nothing to log
+    }
+  });
 }
 
 function buildSearchResult(idea, overrides = {}) {
@@ -63,11 +77,13 @@ app.post('/api/search', async (req, res) => {
   const ideaText = idea.trim();
   let partialResult = buildSearchResult(ideaText);
 
+  console.log(`[search] start "${ideaText}"`);
+  const searchStart = Date.now();
+
   try {
     const result = await Promise.race([
       (async () => {
-        // Step 1: Expand the idea into search angles, then dig deeply.
-        const expansion = await withTimeout(runExpander(ideaText), 30000, null);
+        const expansion = await withTimeout(runExpander(ideaText), 30000, null, 'expander');
         const diggerResult = await withTimeout(
           runDigger(ideaText, expansion || {}),
           105000,
@@ -79,20 +95,23 @@ app.post('/api/search', async (req, res) => {
             sources: [],
             research_quality: EMPTY_RESEARCH_QUALITY,
             search_queries: [],
-          }
+          },
+          'digger'
         );
+        console.log(`[search] digger collected ${diggerResult.sources?.length || 0} sources`);
 
-        // Step 2: Historian + Landscape in parallel
         const [historianResult, landscapeResult] = await Promise.all([
           withTimeout(
             runHistorian(ideaText, diggerResult),
             60000,
-            { timeline: [], data_quality_note: 'timeout' }
+            { timeline: [], data_quality_note: 'timeout' },
+            'historian'
           ),
           withTimeout(
             runLandscape(ideaText, diggerResult),
             60000,
-            { competitors: [] }
+            { competitors: [] },
+            'landscape'
           ),
         ]);
         const timeline = Array.isArray(historianResult?.timeline) ? historianResult.timeline : [];
@@ -106,7 +125,6 @@ app.post('/api/search', async (req, res) => {
           data_quality_note: historianResult.data_quality_note || '',
         });
 
-        // Step 3: Pattern
         const patternResult = await withTimeout(
           runPattern(ideaText, historianResult),
           45000,
@@ -116,7 +134,8 @@ app.post('/api/search', async (req, res) => {
             cross_idea_insight: '',
             graph_size: 0,
             pattern_confidence: 'insufficient_data',
-          }
+          },
+          'pattern'
         );
 
         partialResult = buildSearchResult(ideaText, {
@@ -130,11 +149,11 @@ app.post('/api/search', async (req, res) => {
           graph_size: patternResult.graph_size,
         });
 
-        // Step 4: Synthesis
         const synthesisResult = await withTimeout(
           runSynthesis(ideaText, historianResult, landscapeResult, patternResult, diggerResult),
           45000,
-          { gap: 'Analysis timed out.', clock: 'Timing unavailable.' }
+          { gap: 'Analysis timed out.', clock: 'Timing unavailable.' },
+          'synthesis'
         );
 
         partialResult = buildSearchResult(ideaText, {
@@ -157,11 +176,15 @@ app.post('/api/search', async (req, res) => {
           competitors,
           sources: diggerResult.sources,
           research_quality: diggerResult.research_quality,
-        }), 5000, null);
+        }), 5000, null, 'memory_store');
 
+        console.log(`[search] done in ${Date.now() - searchStart}ms — ${timeline.length} timeline / ${competitors.length} competitors`);
         return partialResult;
       })(),
-      new Promise((resolve) => setTimeout(() => resolve(partialResult), 180000)),
+      new Promise((resolve) => setTimeout(() => {
+        console.error(`[search] hard timeout after 180000ms`);
+        resolve(partialResult);
+      }, 180000)),
     ]);
 
     res.json(result);
@@ -181,6 +204,34 @@ app.post('/api/search', async (req, res) => {
       pattern_confidence: 'insufficient_data',
       graph_size: 0,
     });
+  }
+});
+
+app.post('/api/build', async (req, res) => {
+  const { idea, timeline, competitors, gap, clock, turn_sentence, research_quality } = req.body || {};
+
+  if (!idea || typeof idea !== 'string' || idea.trim().length === 0) {
+    return res.status(400).json({ error: 'idea is required' });
+  }
+
+  try {
+    const plan = await withTimeout(
+      runBuilder(idea.trim(), {
+        timeline: Array.isArray(timeline) ? timeline : [],
+        competitors: Array.isArray(competitors) ? competitors : [],
+        gap: typeof gap === 'string' ? gap : '',
+        clock: typeof clock === 'string' ? clock : '',
+        turn_sentence: typeof turn_sentence === 'string' ? turn_sentence : '',
+        research_quality: research_quality || {},
+      }),
+      45000,
+      EMPTY_PLAN,
+      'builder'
+    );
+    res.json({ idea: idea.trim(), plan });
+  } catch (err) {
+    console.error('Build error:', err);
+    res.status(500).json({ idea: idea.trim(), plan: EMPTY_PLAN, error: 'build_failed' });
   }
 });
 
