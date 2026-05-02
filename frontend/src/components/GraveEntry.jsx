@@ -51,6 +51,59 @@ function MiniBullets({ items, color }) {
   );
 }
 
+function NarrativeParagraph({ heading, text, accent = false }) {
+  if (!text) return null;
+  return (
+    <div
+      style={{
+        marginBottom: '10px',
+        borderLeft: accent ? '2px solid var(--accent)' : 'none',
+        paddingLeft: accent ? '12px' : 0,
+      }}
+    >
+      <p style={monoLabel}>{heading}</p>
+      <p style={bodyText}>{text}</p>
+    </div>
+  );
+}
+
+function ArcSection({ items }) {
+  const arc = Array.isArray(items)
+    ? items.filter((item) => item && item.event).slice(0, 4)
+    : [];
+  if (!arc.length) return null;
+
+  return (
+    <div style={{ marginBottom: '10px' }}>
+      <p style={monoLabel}>The arc</p>
+      <div style={{ display: 'grid', gap: '5px' }}>
+        {arc.map((item, i) => (
+          <div
+            key={`${item.year || 'unknown'}-${i}`}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '52px 1fr',
+              gap: '8px',
+              alignItems: 'baseline',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: '0.72rem',
+                color: 'var(--accent)',
+              }}
+            >
+              {item.year || '—'}
+            </span>
+            <span style={bodyText}>{item.event}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function GraveEntry({ entry, showInscription, index }) {
   const entryRef = useRef(null);
 
@@ -138,9 +191,9 @@ export default function GraveEntry({ entry, showInscription, index }) {
       <div
         style={{
           opacity: showInscription ? 1 : 0,
-          maxHeight: showInscription ? '600px' : '0',
+          maxHeight: showInscription ? '1200px' : '0',
           overflow: 'hidden',
-          transition: 'opacity 600ms ease, max-height 600ms ease',
+          transition: 'opacity 600ms ease, max-height 900ms ease',
           paddingLeft: '2rem',
           marginTop: showInscription ? '8px' : '0',
         }}
@@ -151,6 +204,8 @@ export default function GraveEntry({ entry, showInscription, index }) {
             <p style={bodyText}>{entry.what_was_built}</p>
           </div>
         )}
+
+        <ArcSection items={entry.evolution_timeline} />
 
         {entry.did_right && entry.did_right.length > 0 && (
           <div style={{ marginBottom: '10px' }}>
@@ -166,6 +221,10 @@ export default function GraveEntry({ entry, showInscription, index }) {
           </div>
         )}
 
+        <NarrativeParagraph heading="What worked" text={entry.did_well} />
+        <NarrativeParagraph heading="What failed" text={entry.did_poorly} />
+        <NarrativeParagraph heading="What it lacked" text={entry.project_lacks} />
+
         {!entry.is_alive && entry.cause_of_death && (
           <p style={{ ...bodyText, color: 'var(--text-faint)', marginBottom: '8px' }}>
             {entry.confidence === 'low' ? '~' : ''}Died: {entry.cause_of_death}
@@ -173,6 +232,9 @@ export default function GraveEntry({ entry, showInscription, index }) {
         )}
 
         <SourceLinks sources={entry.sources} fallbackUrl={entry.source_url} />
+
+        <NarrativeParagraph heading="Learn from this" text={entry.avoid_mistakes} accent />
+        <NarrativeParagraph heading="What could have changed" text={entry.improvement_suggestions} />
 
         {detailLink && (
           <Link

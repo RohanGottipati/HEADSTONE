@@ -60,6 +60,12 @@ For each timeline entry extract:
 - did_right: array of 1-3 short bullets describing the smart choices, traction, or innovations of this attempt. Be concrete (e.g. "shipped a working iOS app in 3 weeks", "got 12k organic signups in launch week"). Empty array if unknown.
 - did_wrong: array of 1-3 short bullets describing the specific mistakes or weaknesses that hurt them. Be concrete (e.g. "no notification system, day-4 retention was 12%", "monetized too early, churn spiked"). Empty array if unknown.
 - lesson: string (one sentence — the single most important takeaway a builder should remember from this attempt. Empty string if unknown.)
+- evolution_timeline: array of up to 4 objects { "year": number, "event": string } capturing key project milestones such as launch, pivot, growth, decline, shutdown, or survival. Empty array if unknown.
+- did_well: string (optional 2-4 sentence paragraph expanding on what this project did right. Use concrete evidence; empty string if unknown.)
+- did_poorly: string (optional 2-4 sentence paragraph expanding on the mistakes or weaknesses that hurt this project. Use concrete evidence; empty string if unknown.)
+- project_lacks: string (optional 2-4 sentence paragraph describing what this project lacked: resources, features, timing, market fit, distribution, team, or trust. Empty string if unknown.)
+- avoid_mistakes: string (optional 2-4 sentence direct advice paragraph for someone building this idea today. Address the reader as "you" and ground it in this project's failure. Empty string if unknown.)
+- improvement_suggestions: string (optional 2-4 sentence paragraph describing concrete changes that could have improved this project's outcome. Empty string if unknown.)
 - how_far: "won" | "placed" | "shipped" | "abandoned" | "unknown" (how far did this project get?)
 - cause_of_death: string (be SPECIFIC — not "team moved on" but WHY they stopped. e.g. "day-4 retention was 12%, team graduated and nobody maintained it")
 - source_url: string (a real URL if available, empty string if not)
@@ -68,13 +74,13 @@ For each timeline entry extract:
 - confidence: "high" | "medium" | "low"
 
 If cause of death is unknown, use: "no public record of continuation"
-Never fabricate specific facts or source IDs. If you're uncertain, set confidence to "low" and leave did_right / did_wrong / lesson empty rather than guessing.
+Never fabricate specific facts or source IDs. If you're uncertain, set confidence to "low" and leave did_right / did_wrong / lesson / narrative detail fields empty rather than guessing.
 
 Order results chronologically by year.
 
 Return as:
 {
-  "timeline": [{ "year": 0, "title": "", "what_was_built": "", "what_made_it_different": "", "did_right": [], "did_wrong": [], "lesson": "", "how_far": "abandoned", "cause_of_death": "", "source_url": "", "source_ids": [], "is_alive": false, "confidence": "medium" }],
+  "timeline": [{ "year": 0, "title": "", "what_was_built": "", "what_made_it_different": "", "did_right": [], "did_wrong": [], "lesson": "", "evolution_timeline": [], "did_well": "", "did_poorly": "", "project_lacks": "", "avoid_mistakes": "", "improvement_suggestions": "", "how_far": "abandoned", "cause_of_death": "", "source_url": "", "source_ids": [], "is_alive": false, "confidence": "medium" }],
   "data_quality_note": "string describing data quality"
 }`;
 

@@ -21,6 +21,26 @@ function cleanBulletList(value) {
     .slice(0, 3);
 }
 
+function cleanText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function cleanEvolutionTimeline(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const event = cleanText(item.event);
+      if (!event) return null;
+      return {
+        year: Number(item.year) || 0,
+        event,
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 4);
+}
+
 function enrichTimelineEntry(entry, sources) {
   const explicitIds = Array.isArray(entry.source_ids) ? entry.source_ids : [];
   const ids = sourceIdsFromIndexes(explicitIds, sources);
@@ -35,6 +55,12 @@ function enrichTimelineEntry(entry, sources) {
     did_right: cleanBulletList(entry.did_right),
     did_wrong: cleanBulletList(entry.did_wrong),
     lesson: entry.lesson || '',
+    evolution_timeline: cleanEvolutionTimeline(entry.evolution_timeline),
+    did_well: cleanText(entry.did_well),
+    did_poorly: cleanText(entry.did_poorly),
+    project_lacks: cleanText(entry.project_lacks),
+    avoid_mistakes: cleanText(entry.avoid_mistakes),
+    improvement_suggestions: cleanText(entry.improvement_suggestions),
     how_far: entry.how_far || 'unknown',
     cause_of_death: entry.cause_of_death || 'no public record of continuation',
     source_url: sourceUrl,

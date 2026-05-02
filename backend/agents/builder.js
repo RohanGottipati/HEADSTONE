@@ -23,6 +23,29 @@ function cleanList(value, max = 6) {
   return value.filter(Boolean).slice(0, max);
 }
 
+function cleanText(value, max = 420) {
+  if (typeof value !== 'string') return '';
+  const text = value.replace(/\s+/g, ' ').trim();
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 3).trimEnd()}...`;
+}
+
+function cleanEvolutionTimeline(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const event = cleanText(item.event, 140);
+      if (!event) return null;
+      return {
+        year: Number(item.year) || 0,
+        event,
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 4);
+}
+
 function cleanBulletObjects(value, schema, max = 6) {
   if (!Array.isArray(value)) return [];
   return value
@@ -77,6 +100,12 @@ async function runBuilder(idea, context = {}) {
     did_right: entry.did_right,
     did_wrong: entry.did_wrong,
     lesson: entry.lesson,
+    evolution_timeline: cleanEvolutionTimeline(entry.evolution_timeline),
+    did_well: cleanText(entry.did_well),
+    did_poorly: cleanText(entry.did_poorly),
+    project_lacks: cleanText(entry.project_lacks),
+    avoid_mistakes: cleanText(entry.avoid_mistakes),
+    improvement_suggestions: cleanText(entry.improvement_suggestions),
     cause_of_death: entry.cause_of_death,
     is_alive: entry.is_alive,
   }));
@@ -97,7 +126,7 @@ Timing: ${clock || 'unknown'}
 Research quality:
 ${JSON.stringify(research_quality || {}, null, 2)}
 
-Timeline of past attempts (with what each did right and wrong):
+Timeline of past attempts (with what each did right, wrong, lacked, and left for the next builder):
 ${JSON.stringify(trimmedTimeline, null, 2)}
 
 Live competitors:

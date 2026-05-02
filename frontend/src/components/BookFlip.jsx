@@ -128,7 +128,7 @@ function buildBulletList(items, emptyText, color, maxItems = 2) {
     : [];
 
   if (!safeItems.length) {
-    return `<p style="${BASE}font-size:0.72rem;line-height:1.65;color:${C.pageMuted};">${escapeHtml(emptyText)}</p>`;
+    return `<p style="${BASE}font-size:0.72rem;line-height:1.65;color:${C.pageMuted};">${escapeHtml(shorten(emptyText, 150))}</p>`;
   }
 
   return safeItems
@@ -168,6 +168,18 @@ function buildAttemptOutcome(entry) {
     return entry.cause_of_death;
   }
   return 'No public record fully explains how this attempt ended.';
+}
+
+function buildAttemptStrength(entry) {
+  return entry?.did_well || buildAttemptDifference(entry);
+}
+
+function buildAttemptWeakness(entry) {
+  return entry?.did_poorly || entry?.project_lacks || buildAttemptOutcome(entry);
+}
+
+function buildAttemptAdvice(entry) {
+  return entry?.avoid_mistakes || entry?.improvement_suggestions || buildAttemptLesson(entry);
 }
 
 function buildAttemptLesson(entry) {
@@ -327,7 +339,7 @@ function buildAttemptPage(entry, index, total, pageNumber) {
   const status = statusMeta(entry);
   const source = entry.sources?.[0]?.title || sourceDomain(entry.source_url);
   const title = shorten(entry.title || 'Unknown attempt', 48);
-  const narrativeLead = storyPositionCopy(index, total, entry);
+  const narrativeLead = shorten(entry.did_well || storyPositionCopy(index, total, entry), 150);
   const built = shorten(
     entry.what_was_built || 'No reliable public description captured for what this team actually shipped.',
     230
@@ -357,7 +369,7 @@ function buildAttemptPage(entry, index, total, pageNumber) {
             ${sectionLabel('What moved the story forward')}
             ${buildBulletList(
               entry.did_right,
-              'The public record shows the attempt existed, but not enough detail survived to prove which choices worked best.',
+              entry.did_well || 'The public record shows the attempt existed, but not enough detail survived to prove which choices worked best.',
               C.green
             )}
           </div>
@@ -365,16 +377,16 @@ function buildAttemptPage(entry, index, total, pageNumber) {
             ${sectionLabel('Where it still broke down')}
             ${buildBulletList(
               entry.did_wrong,
-              buildAttemptOutcome(entry),
+              buildAttemptWeakness(entry),
               C.accent
             )}
           </div>
         </div>
 
         <div style="display:grid;gap:12px;align-self:stretch;">
-          ${buildCallout('What made it different', buildAttemptDifference(entry), 'accent')}
-          ${buildCallout('Outcome', buildAttemptOutcome(entry), entry.is_alive ? 'success' : 'quiet')}
-          ${buildCallout('Lesson left behind', buildAttemptLesson(entry), 'quiet')}
+          ${buildCallout('What worked', buildAttemptStrength(entry), 'success')}
+          ${buildCallout('What failed', buildAttemptWeakness(entry), entry.is_alive ? 'quiet' : 'accent')}
+          ${buildCallout('Build differently', buildAttemptAdvice(entry), 'quiet')}
           <div style="margin-top:auto;border-top:1px solid ${C.pageLine};padding-top:12px;">
             <div style="${MONO}font-size:0.56rem;letter-spacing:0.16em;text-transform:uppercase;color:${C.pageMuted};margin-bottom:8px;">Evidence</div>
             <div style="${BASE}font-size:0.72rem;line-height:1.7;color:${C.pageText};">${escapeHtml(shorten(source, 84))}</div>
