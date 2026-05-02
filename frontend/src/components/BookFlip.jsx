@@ -53,7 +53,7 @@ function coverCSS(extra = '') {
 }
 
 function pageCSS(extra = '') {
-  return `background:repeating-linear-gradient(transparent,transparent 27px,${C.pageLine} 27px,${C.pageLine} 28px),linear-gradient(105deg,#e4d4b0 0%,${C.pageBg2} 13%,${C.pageBg} 100%);background-position:0 38px,0 0;display:flex;flex-direction:column;padding:28px 26px 36px;height:100%;position:relative;box-sizing:border-box;overflow:hidden;color:${C.pageText};${extra}`;
+  return `background:repeating-linear-gradient(transparent,transparent 27px,${C.pageLine} 27px,${C.pageLine} 28px),linear-gradient(105deg,#e4d4b0 0%,${C.pageBg2} 13%,${C.pageBg} 100%);background-position:0 38px,0 0;display:flex;flex-direction:column;padding:28px 26px 36px;height:100%;position:relative;box-sizing:border-box;overflow:auto;scrollbar-width:thin;color:${C.pageText};${extra}`;
 }
 
 function badgeCSS(color) {
@@ -621,19 +621,50 @@ function buildFinalChapterPage(data, timeline, pageNumber) {
 
 function buildBuildLoadingPage(data, planState, planError, pageNumber) {
   const isError = planState === 'error';
+  const isLoading = planState === 'loading';
+  const title = isError
+    ? 'The build plan needs another pass'
+    : isLoading
+      ? 'Drafting your build plan'
+      : 'Your build plan page is ready';
+  const body = isError
+    ? `The planner could not finish this draft${planError ? `: ${planError}` : '.'}`
+    : isLoading
+      ? `The notebook is turning the archive for "${data.idea || 'this idea'}" into the first version worth shipping.`
+      : `The build plan exists as the next chapter. Open the Build Plan tab to draft the product wedge, MVP, risks, and next moves from this archive.`;
+  const steps = isError
+    ? ['Archive preserved', 'Planner paused', 'Retry available below']
+    : isLoading
+      ? ['Reading the archive', 'Extracting constraints', 'Writing the plan']
+      : ['Archive preserved', 'Plan chapter waiting', 'Draft starts when opened'];
+  const actionHtml = !isError && !isLoading
+    ? `<a href="/build" style="display:inline-block;margin-top:14px;text-decoration:none;border:1px solid rgba(200,168,74,0.55);background:rgba(200,168,74,0.12);color:${C.pageText};padding:9px 12px;${MONO}font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;">Open build plan</a>`
+    : '';
+
   return `
     <div style="${pageCSS('padding:34px 30px;background-image:none;background:linear-gradient(180deg,#fdf8f0 0%,#fffdf8 100%);justify-content:center;')}">
-      <div style="border:1.5px solid ${isError ? '#a85050' : C.accent};border-radius:22px;padding:28px 26px;background:rgba(255,255,255,0.58);box-shadow:0 24px 70px rgba(196,79,40,0.1);">
+      <div style="border:1.5px solid ${isError ? '#a85050' : C.accent};border-radius:4px;padding:28px 26px;background:rgba(255,255,255,0.58);box-shadow:0 24px 70px rgba(196,79,40,0.1);">
         ${sectionLabel('The next chapter')}
-        <div style="${DISPLAY}font-weight:700;font-size:1.58rem;color:${C.pageText};line-height:1.16;margin-bottom:14px;max-width:410px;">${isError ? 'The build plan needs another pass' : 'Drafting your build plan'}</div>
-        <p style="${BASE}font-size:0.82rem;line-height:1.85;color:${C.pageText};margin-bottom:16px;">${escapeHtml(
-          isError
-            ? `The planner could not finish this draft${planError ? `: ${planError}` : '.'}`
-            : `The notebook is turning the archive for "${data.idea || 'this idea'}" into the first version worth shipping.`
-        )}</p>
+        <div style="${DISPLAY}font-weight:700;font-size:1.58rem;color:${C.pageText};line-height:1.16;margin-bottom:14px;max-width:410px;">${escapeHtml(title)}</div>
+        <p style="${BASE}font-size:0.82rem;line-height:1.85;color:${C.pageText};margin-bottom:16px;">${escapeHtml(body)}</p>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px;">
+          ${steps
+            .map(
+              (step, index) => `
+                <div style="border:1px solid rgba(180,155,110,0.34);background:rgba(255,250,240,0.42);padding:10px 9px;">
+                  <div style="${MONO}font-size:0.52rem;letter-spacing:0.14em;text-transform:uppercase;color:${index === 2 && isError ? '#a85050' : C.pageMuted};margin-bottom:7px;">Step ${index + 1}</div>
+                  <div style="${BASE}font-size:0.7rem;line-height:1.45;color:${C.pageText};">${escapeHtml(step)}</div>
+                  <div style="height:3px;background:rgba(180,155,110,0.22);margin-top:9px;overflow:hidden;">
+                    <div style="height:100%;width:${isLoading ? '64%' : '100%'};background:${isError && index === 2 ? '#a85050' : C.accent};${isLoading ? 'animation:loading-meter-scan 1.35s ease-in-out infinite;' : ''}"></div>
+                  </div>
+                </div>`
+            )
+            .join('')}
+        </div>
         <div style="border-top:1px solid rgba(196,79,40,0.16);padding-top:14px;">
           <div style="${MONO}font-size:0.56rem;letter-spacing:0.16em;text-transform:uppercase;color:${C.pageMuted};margin-bottom:8px;">Input signal</div>
           <div style="${BASE}font-size:0.74rem;line-height:1.75;color:${C.pageMuted};">${escapeHtml(shorten(data.gap || data.turn_sentence || 'Waiting on the research archive.', 170))}</div>
+          ${actionHtml}
         </div>
       </div>
       <div style="${pageNumCSS()}">${pageNumber}</div>
