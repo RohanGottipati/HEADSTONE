@@ -1,22 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const C = {
-  coverBg: '#3d2310',
-  coverText: '#f5e6c8',
-  pageBg: '#fefbf6',
-  pageLine: '#e8e0d0',
-  pageText: '#1c1208',
-  pageMuted: '#8d7b62',
-  accent: '#c44f28',
-  green: '#2d6a38',
-  brown: '#6b4226',
-  shadow: 'rgba(28, 18, 8, 0.2)',
+  coverBg: '#1c1008',
+  coverText: '#f5ead6',
+  pageBg: '#f5ead6',
+  pageBg2: '#f0e3c8',
+  pageLine: 'rgba(180,155,110,0.2)',
+  pageText: '#2a2018',
+  pageMuted: '#7d6b51',
+  accent: '#c8a84a',
+  red: '#8b2020',
+  green: '#2a5a30',
+  brown: '#6a5a48',
+  shadow: 'rgba(0, 0, 0, 0.68)',
 };
 
-const BASE = `font-family:'Manrope',sans-serif;`;
+const BASE = `font-family:'IBM Plex Sans',sans-serif;`;
 const MONO = `font-family:'IBM Plex Mono',monospace;`;
+const DISPLAY = `font-family:'Playfair Display',serif;`;
+const COVER = `font-family:'Cinzel',serif;`;
 const PREVIEW_SIZE = { width: 520, height: 380 };
-const STORY_SIZE = { width: 980, height: 620 };
+const STORY_SIZE = { width: 940, height: 560 };
 
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>"']/g, (char) => {
@@ -45,23 +49,23 @@ function shorten(value, max = 180) {
 }
 
 function coverCSS(extra = '') {
-  return `background:${C.coverBg};display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:32px 28px;height:100%;position:relative;box-sizing:border-box;overflow:hidden;${extra}`;
+  return `background:linear-gradient(135deg,#2a1a0a 0%,${C.coverBg} 44%,#120b05 100%);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:38px 34px;height:100%;position:relative;box-sizing:border-box;overflow:hidden;border:1px solid rgba(200,168,74,0.22);${extra}`;
 }
 
 function pageCSS(extra = '') {
-  return `background:${C.pageBg};display:flex;flex-direction:column;padding:28px 24px;height:100%;position:relative;box-sizing:border-box;background-image:repeating-linear-gradient(transparent,transparent 27px,${C.pageLine} 27px,${C.pageLine} 28px);background-position:0 36px;overflow:hidden;${extra}`;
+  return `background:repeating-linear-gradient(transparent,transparent 27px,${C.pageLine} 27px,${C.pageLine} 28px),linear-gradient(105deg,#e4d4b0 0%,${C.pageBg2} 13%,${C.pageBg} 100%);background-position:0 38px,0 0;display:flex;flex-direction:column;padding:28px 26px 36px;height:100%;position:relative;box-sizing:border-box;overflow:hidden;color:${C.pageText};${extra}`;
 }
 
 function badgeCSS(color) {
-  return `${MONO}font-size:0.58rem;font-weight:600;color:#fefbf6;background:${color};padding:4px 8px;border-radius:999px;white-space:nowrap;margin-top:2px;flex-shrink:0;letter-spacing:0.08em;text-transform:uppercase;`;
+  return `${MONO}font-size:0.54rem;font-weight:600;color:#fefbf6;background:${color};padding:4px 8px;border-radius:2px;white-space:nowrap;margin-top:2px;flex-shrink:0;letter-spacing:0.12em;text-transform:uppercase;`;
 }
 
 function pageNumCSS() {
-  return `${MONO}position:absolute;bottom:16px;right:20px;font-size:0.6rem;color:${C.pageMuted};font-weight:600;letter-spacing:0.08em;`;
+  return `${MONO}position:absolute;bottom:14px;right:22px;font-size:0.58rem;color:${C.pageMuted};font-weight:600;letter-spacing:0.12em;opacity:0.72;`;
 }
 
 function sectionLabel(text) {
-  return `<div style="${MONO}font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:${C.accent};margin-bottom:8px;">${escapeHtml(text)}</div>`;
+  return `<div style="${MONO}font-size:0.54rem;letter-spacing:0.24em;text-transform:uppercase;color:${C.pageMuted};margin-bottom:8px;">${escapeHtml(text)}</div>`;
 }
 
 function sourceDomain(url = '') {
@@ -144,10 +148,10 @@ function buildBulletList(items, emptyText, color, maxItems = 2) {
 
 function buildCallout(label, text, tone = 'accent') {
   const borderColor = tone === 'success' ? C.green : tone === 'quiet' ? C.pageLine : C.accent;
-  const textColor = tone === 'success' ? C.green : C.pageMuted;
+  const textColor = tone === 'success' ? C.green : tone === 'accent' ? C.red : C.pageMuted;
 
   return `
-    <div style="border:1px solid ${borderColor};border-radius:14px;padding:14px 14px 12px;background:rgba(255,255,255,0.45);box-shadow:0 8px 24px rgba(28,18,8,0.04);">
+    <div style="border:1px solid ${borderColor};border-radius:3px;padding:13px 14px 12px;background:rgba(255,250,240,0.45);box-shadow:1px 2px 7px rgba(42,32,24,0.09);">
       <div style="${MONO}font-size:0.56rem;letter-spacing:0.16em;text-transform:uppercase;color:${textColor};margin-bottom:8px;">${escapeHtml(label)}</div>
       <div style="${BASE}font-size:0.76rem;line-height:1.65;color:${C.pageText};">${escapeHtml(shorten(text, 165) || 'No reliable signal was captured.')}</div>
     </div>`;
@@ -201,20 +205,22 @@ function buildAttemptDifference(entry) {
 function buildFrontCover({ title = 'SCOUT', subtitle = 'A field guide to ideas that came before yours' } = {}) {
   return `
     <div style="${coverCSS()}">
-      <div style="position:absolute;top:0;left:0;right:0;bottom:0;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.03) 0px,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 8px);pointer-events:none;"></div>
+      <div style="position:absolute;inset:14px;border:1px solid rgba(200,168,74,0.26);pointer-events:none;"></div>
+      <div style="position:absolute;inset:19px;border:1px solid rgba(200,168,74,0.1);pointer-events:none;"></div>
+      <div style="position:absolute;top:0;left:0;right:0;bottom:0;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 1px,transparent 1px,transparent 8px);pointer-events:none;"></div>
       <div style="width:3px;height:100%;position:absolute;left:0;top:0;background:rgba(0,0,0,0.35);box-shadow:2px 0 8px rgba(0,0,0,0.3);"></div>
       <div style="margin-bottom:auto;padding-top:8px;">
-        <div style="${BASE}font-weight:800;font-size:0.65rem;letter-spacing:0.18em;color:${C.accent};margin-bottom:16px;">IDEA ARCHIVE</div>
-        <div style="${BASE}font-weight:800;font-size:2.2rem;line-height:1.0;letter-spacing:-0.02em;color:${C.coverText};max-width:190px;overflow-wrap:anywhere;">${escapeHtml(shorten(title, 42))}</div>
-        <div style="width:32px;height:2px;background:${C.accent};margin-top:12px;margin-bottom:14px;"></div>
-        <div style="${BASE}font-weight:400;font-size:0.72rem;line-height:1.55;color:rgba(245,230,200,0.6);max-width:160px;">${escapeHtml(shorten(subtitle, 88))}</div>
+        <div style="${MONO}font-weight:600;font-size:0.58rem;letter-spacing:0.24em;color:rgba(200,168,74,0.62);margin-bottom:16px;text-transform:uppercase;">Idea archive</div>
+        <div style="${COVER}font-weight:600;font-size:2rem;line-height:1.08;letter-spacing:0.08em;color:${C.accent};max-width:210px;overflow-wrap:anywhere;text-shadow:0 0 20px rgba(200,168,74,0.24);">${escapeHtml(shorten(title, 42))}</div>
+        <div style="width:54px;height:1px;background:linear-gradient(90deg,transparent,${C.accent},transparent);margin-top:16px;margin-bottom:16px;"></div>
+        <div style="${DISPLAY}font-style:italic;font-weight:400;font-size:0.84rem;line-height:1.55;color:rgba(245,234,214,0.66);max-width:190px;">${escapeHtml(shorten(subtitle, 88))}</div>
       </div>
-      <div style="${BASE}font-weight:600;font-size:0.6rem;letter-spacing:0.1em;color:rgba(245,230,200,0.35);margin-top:auto;">VOL. I — 2024</div>
+      <div style="${MONO}font-weight:600;font-size:0.56rem;letter-spacing:0.16em;color:rgba(245,230,200,0.35);margin-top:auto;text-transform:uppercase;">Vol. I / 2026</div>
     </div>`;
 }
 
 function buildInsideCover(text) {
-  return `<div style="background:#2a1a0e;display:flex;align-items:center;justify-content:center;height:100%;box-sizing:border-box;"><div style="${MONO}font-size:0.65rem;color:rgba(245,230,200,0.25);letter-spacing:0.1em;text-transform:uppercase;text-align:center;padding:0 24px;line-height:1.8;">${escapeHtml(text)}</div></div>`;
+  return `<div style="background:linear-gradient(135deg,#1b1007 0%,#0f0a05 100%);display:flex;align-items:center;justify-content:center;height:100%;box-sizing:border-box;border:1px solid rgba(200,168,74,0.12);"><div style="${MONO}font-size:0.62rem;color:rgba(245,230,200,0.28);letter-spacing:0.16em;text-transform:uppercase;text-align:center;padding:0 28px;line-height:1.9;">${escapeHtml(text)}</div></div>`;
 }
 
 function buildIntroPage() {
@@ -269,9 +275,9 @@ function buildBackCover(title = 'SCOUT') {
     <div style="${coverCSS('align-items:center;justify-content:center;')}">
       <div style="width:3px;height:100%;position:absolute;right:0;top:0;background:rgba(0,0,0,0.35);box-shadow:-2px 0 8px rgba(0,0,0,0.3);"></div>
       <div style="text-align:center;max-width:220px;">
-        <div style="${BASE}font-weight:800;font-size:1.4rem;color:${C.coverText};letter-spacing:-0.02em;margin-bottom:10px;line-height:1.15;">${escapeHtml(title)}</div>
-        <div style="width:24px;height:2px;background:${C.accent};margin:0 auto 12px;"></div>
-        <div style="${BASE}font-size:0.65rem;color:rgba(245,230,200,0.45);letter-spacing:0.06em;line-height:1.6;">Open yours<br>before you build.</div>
+        <div style="${COVER}font-weight:600;font-size:1.3rem;color:${C.accent};letter-spacing:0.12em;margin-bottom:12px;line-height:1.25;">${escapeHtml(title)}</div>
+        <div style="width:42px;height:1px;background:linear-gradient(90deg,transparent,${C.accent},transparent);margin:0 auto 12px;"></div>
+        <div style="${MONO}font-size:0.58rem;color:rgba(245,230,200,0.42);letter-spacing:0.14em;line-height:1.8;text-transform:uppercase;">Open yours<br>before you build.</div>
       </div>
     </div>`;
 }
@@ -281,14 +287,16 @@ function buildStoryCover(data, timeline) {
   const span = years.length ? `${Math.min(...years)} — ${Math.max(...years)}` : 'Unmapped';
   return `
     <div style="${coverCSS('padding:42px 36px;')}">
-      <div style="position:absolute;inset:0;background:radial-gradient(circle at top right, rgba(196,79,40,0.22), transparent 42%),repeating-linear-gradient(135deg,rgba(255,255,255,0.03) 0px,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 9px);pointer-events:none;"></div>
+      <div style="position:absolute;inset:14px;border:1px solid rgba(200,168,74,0.26);pointer-events:none;"></div>
+      <div style="position:absolute;inset:19px;border:1px solid rgba(200,168,74,0.1);pointer-events:none;"></div>
+      <div style="position:absolute;inset:0;background:radial-gradient(circle at top right, rgba(200,168,74,0.16), transparent 44%),repeating-linear-gradient(135deg,rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 1px,transparent 1px,transparent 9px);pointer-events:none;"></div>
       <div style="width:5px;height:100%;position:absolute;left:0;top:0;background:rgba(0,0,0,0.35);box-shadow:2px 0 12px rgba(0,0,0,0.32);"></div>
-      <div style="${MONO}font-size:0.7rem;letter-spacing:0.22em;color:${C.accent};text-transform:uppercase;margin-bottom:24px;">Idea archive</div>
-      <div style="${BASE}font-size:2.9rem;font-weight:800;line-height:1.02;letter-spacing:-0.04em;color:${C.coverText};max-width:360px;overflow-wrap:anywhere;margin-bottom:16px;">${escapeHtml(shorten(data.idea || 'Untitled idea', 64))}</div>
-      <div style="width:44px;height:2px;background:${C.accent};margin-bottom:16px;"></div>
-      <div style="${BASE}font-size:0.92rem;line-height:1.7;color:rgba(245,230,200,0.7);max-width:340px;">A chronological story of every visible attempt, from the first recorded build to the opening you could still claim now.</div>
+      <div style="${MONO}font-size:0.64rem;letter-spacing:0.24em;color:rgba(200,168,74,0.64);text-transform:uppercase;margin-bottom:24px;">Idea archive</div>
+      <div style="${DISPLAY}font-size:2.65rem;font-weight:700;line-height:1.02;letter-spacing:0;color:${C.coverText};max-width:360px;overflow-wrap:anywhere;margin-bottom:16px;">${escapeHtml(shorten(data.idea || 'Untitled idea', 64))}</div>
+      <div style="width:54px;height:1px;background:linear-gradient(90deg,transparent,${C.accent},transparent);margin-bottom:16px;"></div>
+      <div style="${BASE}font-size:0.9rem;line-height:1.75;color:rgba(245,234,214,0.68);max-width:340px;">A chronological story of every visible attempt, from the first recorded build to the opening you could still claim now.</div>
       <div style="margin-top:auto;display:flex;gap:12px;flex-wrap:wrap;">
-        <div style="${badgeCSS('rgba(196,79,40,0.88)')}border:none;">${timeline.length} attempts</div>
+        <div style="${badgeCSS('rgba(139,32,32,0.88)')}border:none;">${timeline.length} attempts</div>
         <div style="${badgeCSS('rgba(42,26,14,0.78)')}border:1px solid rgba(245,230,200,0.14);">${escapeHtml(span)}</div>
       </div>
     </div>`;
@@ -311,18 +319,18 @@ function buildStoryIntroPage(data, timeline, pageNumber) {
   return `
     <div style="${pageCSS('padding:34px 30px;')}">
       ${sectionLabel('Foreword')}
-      <div style="${BASE}font-size:1.36rem;font-weight:800;line-height:1.18;color:${C.pageText};margin-bottom:14px;max-width:360px;">How this idea learned to become a market</div>
+      <div style="${DISPLAY}font-size:1.6rem;font-weight:700;line-height:1.14;color:${C.pageText};margin-bottom:14px;max-width:360px;">How this idea learned to become a market</div>
       <p style="${BASE}font-size:0.82rem;line-height:1.82;color:${C.pageText};max-width:390px;margin-bottom:16px;">${escapeHtml(attemptsCopy)}</p>
       <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:16px;align-items:start;flex:1;min-height:0;">
         <div>
-          <div style="border:1px solid ${C.pageLine};border-radius:18px;padding:16px;background:rgba(255,255,255,0.46);margin-bottom:14px;">
+          <div style="border:1px solid rgba(180,155,110,0.42);border-left:2px solid ${C.accent};border-radius:3px;padding:15px 16px;background:rgba(255,250,240,0.42);margin-bottom:14px;">
             <div style="${MONO}font-size:0.56rem;letter-spacing:0.16em;text-transform:uppercase;color:${C.pageMuted};margin-bottom:8px;">What repeats</div>
-            <div style="${BASE}font-size:0.92rem;line-height:1.7;color:${C.pageText};font-weight:700;">${escapeHtml(turnSentence)}</div>
+            <div style="${DISPLAY}font-size:1.02rem;line-height:1.6;color:${C.pageText};font-weight:700;font-style:italic;">${escapeHtml(turnSentence)}</div>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <div style="border:1px solid ${C.pageLine};border-radius:999px;padding:8px 12px;background:#fffaf3;${MONO}font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:${C.pageMuted};">${timeline.length} attempts logged</div>
-            <div style="border:1px solid ${C.pageLine};border-radius:999px;padding:8px 12px;background:#fffaf3;${MONO}font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:${C.pageMuted};">${survivors} still alive</div>
-            <div style="border:1px solid ${C.pageLine};border-radius:999px;padding:8px 12px;background:#fffaf3;${MONO}font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:${C.pageMuted};">${data.research_quality?.distinct_domains || 0} domains checked</div>
+            <div style="border:1px solid rgba(180,155,110,0.38);padding:7px 10px;background:#fffaf3;${MONO}font-size:0.56rem;letter-spacing:0.12em;text-transform:uppercase;color:${C.pageMuted};">${timeline.length} attempts logged</div>
+            <div style="border:1px solid rgba(180,155,110,0.38);padding:7px 10px;background:#fffaf3;${MONO}font-size:0.56rem;letter-spacing:0.12em;text-transform:uppercase;color:${C.pageMuted};">${survivors} still alive</div>
+            <div style="border:1px solid rgba(180,155,110,0.38);padding:7px 10px;background:#fffaf3;${MONO}font-size:0.56rem;letter-spacing:0.12em;text-transform:uppercase;color:${C.pageMuted};">${data.research_quality?.distinct_domains || 0} domains checked</div>
           </div>
         </div>
         <div style="border-left:1px solid ${C.pageLine};padding-left:16px;">
@@ -330,6 +338,165 @@ function buildStoryIntroPage(data, timeline, pageNumber) {
           <p style="${BASE}font-size:0.72rem;line-height:1.8;color:${C.pageMuted};margin-bottom:12px;">Each turn tracks one attempt: what it shipped, the angle it tried, what moved the category forward, and what stalled or survived.</p>
           <p style="${BASE}font-size:0.72rem;line-height:1.8;color:${C.pageMuted};">By the final pages, the repeated pattern, the open gap, and your place in the story should feel obvious.</p>
         </div>
+      </div>
+      <div style="${pageNumCSS()}">${pageNumber}</div>
+    </div>`;
+}
+
+function buildArchivePage(data, timeline, pageNumber) {
+  const rawSources = Array.isArray(data.sources) ? data.sources : [];
+  const sourceClippings = rawSources.slice(0, 6).map((source) => ({
+    tag: source.source_type || source.evidence_kind || source.domain || 'source',
+    title: source.title || source.domain || 'Public record',
+    detail: source.snippet || source.url || source.evidence_kind || 'Evidence attached to this idea.',
+  }));
+  const timelineClippings = timeline.slice(0, 6).map((entry) => ({
+    tag: entry.is_alive ? 'live product' : entry.how_far || 'attempt',
+    title: entry.title || 'Unknown attempt',
+    detail: entry.what_was_built || entry.cause_of_death || 'A visible attempt in the category.',
+  }));
+  const clippings = (sourceClippings.length ? sourceClippings : timelineClippings).slice(0, 6);
+  const quality = data.research_quality || {};
+  const sourceTypes = Array.isArray(quality.source_types) ? quality.source_types.slice(0, 5) : [];
+  const rows = [
+    ['sources indexed', quality.evidence_count || rawSources.length || timeline.length],
+    ['domains checked', quality.distinct_domains || 0],
+    ['pattern confidence', toTitleCase(data.pattern_confidence || 'unknown')],
+    ['memory graph', `${data.graph_size || 0} linked ideas`],
+  ];
+
+  const clippingHtml = clippings.length
+    ? clippings
+        .map(
+          (item, index) => `
+            <div style="background:#faf3e0;border:1px solid #d4b870;padding:9px 10px 10px;box-shadow:1px 2px 6px rgba(42,32,24,0.12);transform:rotate(${index % 2 === 0 ? '0.7deg' : '-0.6deg'});min-height:86px;overflow:hidden;">
+              <div style="width:30px;height:8px;background:rgba(200,168,74,0.2);border:1px solid rgba(200,168,74,0.12);margin:0 auto 6px;"></div>
+              <div style="${MONO}font-size:0.48rem;letter-spacing:0.2em;text-transform:uppercase;color:${C.accent};margin-bottom:4px;">${escapeHtml(shorten(item.tag, 20))}</div>
+              <div style="${BASE}font-size:0.76rem;font-weight:600;line-height:1.3;color:${C.pageText};overflow-wrap:anywhere;">${escapeHtml(shorten(item.title, 52))}</div>
+              <div style="${MONO}font-size:0.58rem;line-height:1.45;color:${C.brown};margin-top:4px;">${escapeHtml(shorten(item.detail, 84))}</div>
+            </div>`
+        )
+        .join('')
+    : `<div style="grid-column:1 / -1;border:1px solid #d4b870;background:#faf3e0;padding:16px;${BASE}font-size:0.78rem;line-height:1.7;color:${C.pageMuted};">The archive did not return enough public records to create clippings yet.</div>`;
+
+  return `
+    <div style="${pageCSS('padding:34px 30px;background-image:none;background:linear-gradient(105deg,#e4d4b0 0%,#f2e6cc 13%,#f5ead6 100%);')}">
+      ${sectionLabel('Chapter I')}
+      <div style="${DISPLAY}font-size:1.58rem;font-weight:700;line-height:1.14;color:${C.pageText};margin-bottom:12px;">The archives open</div>
+      <div style="display:grid;grid-template-columns:1.08fr 0.92fr;gap:18px;align-items:start;flex:1;min-height:0;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;align-content:start;">${clippingHtml}</div>
+        <div style="border-left:1px solid rgba(180,155,110,0.42);padding-left:16px;">
+          <div style="${MONO}font-size:0.54rem;letter-spacing:0.22em;text-transform:uppercase;color:${C.pageMuted};margin-bottom:10px;">Evidence ledger</div>
+          ${rows
+            .map(
+              ([label, value]) => `
+                <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(180,155,110,0.24);">
+                  <span style="${MONO}font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:${C.pageMuted};">${escapeHtml(label)}</span>
+                  <span style="${BASE}font-size:0.74rem;font-weight:600;color:${C.pageText};text-align:right;">${escapeHtml(value)}</span>
+                </div>`
+            )
+            .join('')}
+          <div style="margin-top:14px;">
+            <div style="${MONO}font-size:0.52rem;letter-spacing:0.18em;text-transform:uppercase;color:${C.pageMuted};margin-bottom:8px;">Source types</div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;">
+              ${(sourceTypes.length ? sourceTypes : ['web', 'repository', 'live product'])
+                .map((type) => `<span style="border:1px solid rgba(180,155,110,0.4);background:rgba(255,250,240,0.44);padding:5px 7px;${MONO}font-size:0.52rem;letter-spacing:0.12em;text-transform:uppercase;color:${C.brown};">${escapeHtml(type)}</span>`)
+                .join('')}
+            </div>
+          </div>
+          <p style="${DISPLAY}font-size:0.96rem;font-style:italic;line-height:1.55;color:${C.pageText};margin-top:18px;">The dead leave more evidence than the living.</p>
+        </div>
+      </div>
+      <div style="${pageNumCSS()}">${pageNumber}</div>
+    </div>`;
+}
+
+function buildMemoryGraphPage(data, timeline, pageNumber) {
+  const cx = 235;
+  const cy = 148;
+  const attempts = timeline.slice(0, 8);
+  const patternTexts = timeline
+    .flatMap((entry) => [...(entry.did_wrong || []), entry.cause_of_death || entry.project_lacks || ''])
+    .map((item) => shorten(item, 34))
+    .filter(Boolean)
+    .slice(0, 4);
+  const patterns = (patternTexts.length ? patternTexts : ['No re-engagement', 'Distribution gap', 'Retention cliff', 'Thin evidence']).slice(0, 4);
+  const nodes = [{ id: 'center', label: 'Your idea', type: 'center', x: cx, y: cy, r: 11 }];
+
+  attempts.forEach((entry, index) => {
+    const angle = (index / Math.max(attempts.length, 1)) * Math.PI * 2 - Math.PI / 2;
+    const dist = entry.is_alive ? 82 : 104;
+    nodes.push({
+      id: `t${index}`,
+      label: entry.title || `Attempt ${index + 1}`,
+      year: entry.year,
+      type: entry.is_alive ? 'alive' : 'dead',
+      x: Math.round(cx + Math.cos(angle) * dist),
+      y: Math.round(cy + Math.sin(angle) * dist),
+      r: entry.is_alive ? 6 : 5,
+    });
+  });
+
+  patterns.forEach((label, index) => {
+    const coords = [
+      [82, 64],
+      [388, 70],
+      [88, 235],
+      [376, 228],
+    ][index];
+    nodes.push({ id: `p${index}`, label, type: 'pattern', x: coords[0], y: coords[1], r: 7 });
+  });
+
+  const colorMap = {
+    center: C.accent,
+    alive: C.green,
+    dead: C.brown,
+    pattern: C.red,
+  };
+
+  const links = [
+    ...attempts.map((_, index) => ['center', `t${index}`, false]),
+    ...attempts.slice(0, patterns.length).map((_, index) => [`t${index}`, `p${index % patterns.length}`, true]),
+  ];
+
+  const lines = links
+    .map(([source, target, dashed]) => {
+      const s = nodes.find((node) => node.id === source);
+      const t = nodes.find((node) => node.id === target);
+      if (!s || !t) return '';
+      return `<line x1="${s.x}" y1="${s.y}" x2="${t.x}" y2="${t.y}" stroke="${dashed ? 'rgba(139,32,32,0.28)' : 'rgba(106,90,72,0.28)'}" stroke-width="${dashed ? 1.2 : 0.9}" ${dashed ? 'stroke-dasharray="4 4"' : ''} />`;
+    })
+    .join('');
+
+  const circles = nodes
+    .map(
+      (node) => `
+        <g>
+          <circle cx="${node.x}" cy="${node.y}" r="${node.r}" fill="${colorMap[node.type]}" opacity="${node.type === 'center' ? 1 : 0.78}" />
+          <text x="${node.x}" y="${node.type === 'pattern' || node.type === 'center' ? node.y + node.r + 11 : node.y - node.r - 5}" text-anchor="middle" font-size="${node.type === 'center' ? 8 : 7}" font-family="IBM Plex Mono, monospace" fill="${colorMap[node.type]}" opacity="0.82">${escapeHtml(shorten(node.type === 'alive' || node.type === 'dead' ? node.year || node.label : node.label, 22))}</text>
+        </g>`
+    )
+    .join('');
+
+  return `
+    <div style="${pageCSS('padding:34px 30px;background-image:none;background:linear-gradient(180deg,#f5ead6 0%,#f0e3c8 100%);')}">
+      ${sectionLabel('Chapter IV')}
+      <div style="${DISPLAY}font-size:1.58rem;font-weight:700;line-height:1.14;color:${C.pageText};margin-bottom:10px;">The pattern under the pages</div>
+      <p style="${BASE}font-size:0.76rem;line-height:1.7;color:${C.pageMuted};max-width:410px;margin-bottom:8px;">Repeated failures connect across the archive. The shape matters more than any single product.</p>
+      <div style="position:relative;flex:1;min-height:0;border:1px solid rgba(180,155,110,0.28);background:rgba(255,250,240,0.24);overflow:hidden;">
+        <svg width="100%" height="100%" viewBox="0 0 470 295" preserveAspectRatio="xMidYMid meet">
+          ${lines}
+          ${circles}
+        </svg>
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;padding-top:10px;">
+        <div style="${MONO}font-size:0.56rem;letter-spacing:0.12em;text-transform:uppercase;color:${C.pageMuted};">
+          <span style="color:${C.accent};">●</span> idea &nbsp;
+          <span style="color:${C.green};">●</span> alive &nbsp;
+          <span style="color:${C.brown};">●</span> dead &nbsp;
+          <span style="color:${C.red};">●</span> pattern
+        </div>
+        <div style="${MONO}font-size:0.56rem;letter-spacing:0.12em;text-transform:uppercase;color:${C.pageMuted};">${data.graph_size || nodes.length} ideas in memory</div>
       </div>
       <div style="${pageNumCSS()}">${pageNumber}</div>
     </div>`;
@@ -350,7 +517,7 @@ function buildAttemptPage(entry, index, total, pageNumber) {
       <div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px;">
         <div>
           <div style="${MONO}font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:${C.pageMuted};margin-bottom:6px;">Attempt ${String(index + 1).padStart(2, '0')}</div>
-          <div style="${BASE}font-size:1.46rem;font-weight:800;line-height:1.1;color:${C.pageText};max-width:330px;overflow-wrap:anywhere;">${escapeHtml(title)}</div>
+          <div style="${DISPLAY}font-size:1.54rem;font-weight:700;line-height:1.12;color:${C.pageText};max-width:330px;overflow-wrap:anywhere;">${escapeHtml(title)}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
           <div style="${badgeCSS(status.color)}">${escapeHtml(status.label)}</div>
@@ -418,7 +585,7 @@ function buildCompetitorsPage(competitors, pageNumber) {
   return `
     <div style="${pageCSS('padding:34px 30px;')}">
       ${sectionLabel('Who is still standing')}
-      <div style="${BASE}font-size:1.38rem;font-weight:800;line-height:1.18;color:${C.pageText};margin-bottom:12px;max-width:360px;">The market that survived the earlier waves</div>
+      <div style="${DISPLAY}font-size:1.54rem;font-weight:700;line-height:1.16;color:${C.pageText};margin-bottom:12px;max-width:360px;">The market that survived the earlier waves</div>
       <p style="${BASE}font-size:0.78rem;line-height:1.8;color:${C.pageMuted};margin-bottom:18px;max-width:400px;">These are the products or companies still occupying the shelf after the historical attempts above. Their presence shows what the category learned to reward — and what they still haven&apos;t solved cleanly.</p>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-content:start;">
         ${content}
@@ -453,7 +620,7 @@ function buildIndexPage(data, timeline, pageNumber, pageIndex, totalPages) {
       ${sectionLabel('The notebook index')}
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px;">
         <div>
-          <div style="${BASE}font-size:1.38rem;font-weight:800;line-height:1.16;color:${C.pageText};max-width:360px;overflow-wrap:anywhere;">Every attempt at ${escapeHtml(shorten(data.idea || 'this idea', 48))}</div>
+          <div style="${DISPLAY}font-size:1.5rem;font-weight:700;line-height:1.16;color:${C.pageText};max-width:360px;overflow-wrap:anywhere;">Every attempt at ${escapeHtml(shorten(data.idea || 'this idea', 48))}</div>
           <p style="${BASE}font-size:0.74rem;line-height:1.72;color:${C.pageMuted};margin-top:10px;max-width:390px;">Ordered oldest to newest. Open any row to jump directly to that attempt inside the notebook.</p>
         </div>
         <div style="${MONO}font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;color:${C.pageMuted};white-space:nowrap;">${timeline.length} logged</div>
@@ -478,7 +645,7 @@ function buildPatternPage(data, timeline, pageNumber) {
   return `
     <div style="${pageCSS('padding:34px 30px;background-image:none;background:linear-gradient(180deg,#fefbf6 0%,#faf2e7 100%);')}">
       ${sectionLabel('The recurring pattern')}
-      <div style="${BASE}font-size:1.52rem;font-weight:800;line-height:1.15;color:${C.pageText};max-width:390px;margin-bottom:16px;">${escapeHtml(shorten(data.turn_sentence || 'The archive could not prove a single dominant failure mode.', 150))}</div>
+      <div style="${DISPLAY}font-size:1.62rem;font-weight:700;font-style:italic;line-height:1.2;color:${C.pageText};max-width:390px;margin-bottom:16px;">${escapeHtml(shorten(data.turn_sentence || 'The archive could not prove a single dominant failure mode.', 150))}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;flex:1;min-height:0;">
         <div style="border:1px solid rgba(196,79,40,0.18);border-radius:22px;padding:18px;background:rgba(255,255,255,0.56);box-shadow:0 18px 46px rgba(196,79,40,0.08);">
           <div style="${MONO}font-size:0.56rem;letter-spacing:0.16em;text-transform:uppercase;color:${C.accent};margin-bottom:10px;">What the judges should see</div>
@@ -503,7 +670,7 @@ function buildGapPage(data, pageNumber) {
     <div style="${pageCSS('padding:34px 30px;background-image:none;background:linear-gradient(180deg,#fdf8f0 0%,#fffdf8 100%);justify-content:center;')}">
       <div style="border:1.5px solid ${C.accent};border-radius:20px;padding:26px 24px;background:rgba(255,255,255,0.58);box-shadow:0 24px 70px rgba(196,79,40,0.1);">
         ${sectionLabel('The gap still open')}
-        <div style="${BASE}font-weight:800;font-size:1.48rem;color:${C.pageText};line-height:1.18;margin-bottom:14px;max-width:420px;">What nobody has fully claimed yet</div>
+        <div style="${DISPLAY}font-weight:700;font-size:1.56rem;color:${C.pageText};line-height:1.18;margin-bottom:14px;max-width:420px;">What nobody has fully claimed yet</div>
         <div style="${BASE}font-size:0.82rem;line-height:1.9;color:${C.pageText};margin-bottom:16px;">${escapeHtml(shorten(data.gap || 'The archive did not find a strong enough opening to name with confidence.', 350))}</div>
         <div style="border-top:1px solid rgba(196,79,40,0.16);padding-top:14px;">
           <div style="${MONO}font-size:0.56rem;letter-spacing:0.16em;text-transform:uppercase;color:${C.pageMuted};margin-bottom:8px;">Why now</div>
@@ -526,7 +693,7 @@ function buildFinalChapterPage(data, timeline, pageNumber) {
   return `
     <div style="${pageCSS('padding:34px 30px;background-image:none;background:linear-gradient(145deg,#fdf6ee 0%,#f7eee2 45%,#fefbf6 100%);')}">
       ${sectionLabel('Your chapter')}
-      <div style="${BASE}font-size:1.7rem;font-weight:800;line-height:1.08;color:${C.pageText};max-width:360px;margin-bottom:12px;overflow-wrap:anywhere;">The next chapter belongs to ${escapeHtml(shorten(data.idea || 'this idea', 46))}</div>
+      <div style="${DISPLAY}font-size:1.78rem;font-weight:700;line-height:1.1;color:${C.pageText};max-width:360px;margin-bottom:12px;overflow-wrap:anywhere;">The next chapter belongs to ${escapeHtml(shorten(data.idea || 'this idea', 46))}</div>
       <p style="${BASE}font-size:0.8rem;line-height:1.82;color:${C.pageMuted};max-width:410px;margin-bottom:18px;">${escapeHtml(shorten(finalNote, 160))}</p>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;">
         ${buildCallout('Repeat no more', data.turn_sentence || 'No dominant failure pattern was proven strongly enough to feature here.', 'accent')}
@@ -550,7 +717,7 @@ function buildBuildLoadingPage(data, planState, planError, pageNumber) {
     <div style="${pageCSS('padding:34px 30px;background-image:none;background:linear-gradient(180deg,#fdf8f0 0%,#fffdf8 100%);justify-content:center;')}">
       <div style="border:1.5px solid ${isError ? '#a85050' : C.accent};border-radius:22px;padding:28px 26px;background:rgba(255,255,255,0.58);box-shadow:0 24px 70px rgba(196,79,40,0.1);">
         ${sectionLabel('The next chapter')}
-        <div style="${BASE}font-weight:800;font-size:1.52rem;color:${C.pageText};line-height:1.16;margin-bottom:14px;max-width:410px;">${isError ? 'The build plan needs another pass' : 'Drafting your build plan'}</div>
+        <div style="${DISPLAY}font-weight:700;font-size:1.58rem;color:${C.pageText};line-height:1.16;margin-bottom:14px;max-width:410px;">${isError ? 'The build plan needs another pass' : 'Drafting your build plan'}</div>
         <p style="${BASE}font-size:0.82rem;line-height:1.85;color:${C.pageText};margin-bottom:16px;">${escapeHtml(
           isError
             ? `The planner could not finish this draft${planError ? `: ${planError}` : '.'}`
@@ -569,7 +736,7 @@ function buildPlanSummaryPage(data, plan, pageNumber) {
   return `
     <div style="${pageCSS('padding:34px 30px;background-image:none;background:linear-gradient(145deg,#fdf6ee 0%,#f7eee2 48%,#fefbf6 100%);')}">
       ${sectionLabel('The next chapter')}
-      <div style="${BASE}font-size:1.54rem;font-weight:800;line-height:1.12;color:${C.pageText};max-width:390px;margin-bottom:12px;overflow-wrap:anywhere;">${escapeHtml(shorten(plan?.headline || `Your build of ${data.idea || 'this idea'}`, 92))}</div>
+      <div style="${DISPLAY}font-size:1.62rem;font-weight:700;line-height:1.14;color:${C.pageText};max-width:390px;margin-bottom:12px;overflow-wrap:anywhere;">${escapeHtml(shorten(plan?.headline || `Your build of ${data.idea || 'this idea'}`, 92))}</div>
       <p style="${BASE}font-size:0.8rem;line-height:1.82;color:${C.pageMuted};max-width:410px;margin-bottom:18px;">${escapeHtml(shorten(plan?.positioning || data.gap || 'Use the archive as constraints for what to build next.', 240))}</p>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;">
         ${buildCallout('Wedge', data.gap || 'The opening still needs sharper evidence.', 'success')}
@@ -615,7 +782,7 @@ function buildPlanBorrowAvoidPage(plan, pageNumber) {
   return `
     <div style="${pageCSS('padding:34px 30px;background-image:none;background:#fefbf6;')}">
       ${sectionLabel('Borrow and avoid')}
-      <div style="${BASE}font-size:1.34rem;font-weight:800;line-height:1.18;color:${C.pageText};max-width:390px;margin-bottom:16px;">Use the archive as product constraints</div>
+      <div style="${DISPLAY}font-size:1.48rem;font-weight:700;line-height:1.18;color:${C.pageText};max-width:390px;margin-bottom:16px;">Use the archive as product constraints</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
         <div>
           <div style="${MONO}font-size:0.56rem;letter-spacing:0.16em;text-transform:uppercase;color:${C.green};margin-bottom:10px;">Borrow from winners</div>
@@ -636,7 +803,7 @@ function buildPlanMvpPage(plan, pageNumber) {
   return `
     <div style="${pageCSS('padding:34px 30px;background-image:none;background:linear-gradient(180deg,#fffdf8 0%,#f9f0e5 100%);')}">
       ${sectionLabel('MVP')}
-      <div style="${BASE}font-size:1.42rem;font-weight:800;line-height:1.16;color:${C.pageText};max-width:390px;margin-bottom:12px;">The smallest thing worth shipping</div>
+      <div style="${DISPLAY}font-size:1.5rem;font-weight:700;line-height:1.16;color:${C.pageText};max-width:390px;margin-bottom:12px;">The smallest thing worth shipping</div>
       <p style="${BASE}font-size:0.8rem;line-height:1.8;color:${C.pageText};max-width:420px;margin-bottom:16px;">${escapeHtml(shorten(plan?.mvp?.summary || 'MVP plan unavailable.', 220))}</p>
       <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:16px;align-items:start;">
         <div>
@@ -685,7 +852,7 @@ function buildPlanGrowthPage(plan, pageNumber) {
   return `
     <div style="${pageCSS('padding:34px 30px;background-image:none;background:#fefbf6;')}">
       ${sectionLabel('After the MVP')}
-      <div style="${BASE}font-size:1.34rem;font-weight:800;line-height:1.18;color:${C.pageText};max-width:390px;margin-bottom:16px;">Add only what strengthens the loop</div>
+      <div style="${DISPLAY}font-size:1.48rem;font-weight:700;line-height:1.18;color:${C.pageText};max-width:390px;margin-bottom:16px;">Add only what strengthens the loop</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
         <div>
           <div style="${MONO}font-size:0.56rem;letter-spacing:0.16em;text-transform:uppercase;color:${C.green};margin-bottom:10px;">V1 features</div>
@@ -722,7 +889,7 @@ function buildPlanNextStepsPage(plan, pageNumber) {
   return `
     <div style="${pageCSS('padding:34px 30px;background-image:none;background:linear-gradient(180deg,#fdf8f0 0%,#fffdf8 100%);')}">
       ${sectionLabel('This week')}
-      <div style="${BASE}font-size:1.5rem;font-weight:800;line-height:1.14;color:${C.pageText};max-width:380px;margin-bottom:16px;">The next three moves</div>
+      <div style="${DISPLAY}font-size:1.58rem;font-weight:700;line-height:1.14;color:${C.pageText};max-width:380px;margin-bottom:16px;">The next three moves</div>
       <div style="max-width:420px;">${content}</div>
       <div style="margin-top:auto;border-top:1px solid rgba(196,79,40,0.16);padding-top:14px;">
         <div style="${MONO}font-size:0.56rem;letter-spacing:0.16em;text-transform:uppercase;color:${C.pageMuted};margin-bottom:8px;">Iteration desk</div>
@@ -815,6 +982,7 @@ function buildStoryPages(data, { plan = null, planState = 'idle', planError = nu
   pages.push({ id: 'cover', hard: true, label: 'Cover', html: buildStoryCover(data, timeline) });
   pages.push({ id: 'prompt', hard: true, label: 'Prompt', html: buildInsideCover(`Prompt — ${data.idea || 'Untitled idea'}`) });
   pages.push({ id: 'history', label: 'Foreword', html: buildStoryIntroPage(data, timeline, logicalPage++) });
+  pages.push({ id: 'archives', label: 'The archives', html: buildArchivePage(data, timeline, logicalPage++) });
 
   const indexPages = timeline.length ? chunk(timeline, 4) : [[]];
   indexPages.forEach((_entries, pageIndex) => {
@@ -849,6 +1017,7 @@ function buildStoryPages(data, { plan = null, planState = 'idle', planError = nu
 
   pages.push({ id: 'living-market', label: 'Living market', html: buildCompetitorsPage(data.competitors || [], logicalPage++) });
   pages.push({ id: 'pattern', label: 'Pattern', html: buildPatternPage(data, timeline, logicalPage++) });
+  pages.push({ id: 'memory', label: 'Memory graph', html: buildMemoryGraphPage(data, timeline, logicalPage++) });
   pages.push({ id: 'gap', label: 'Gap', html: buildGapPage(data, logicalPage++) });
   pages.push({ id: 'chapter', label: 'Your chapter', html: buildFinalChapterPage(data, timeline, logicalPage++) });
 
@@ -1038,7 +1207,7 @@ export default function BookFlip({
   const stageHeight = dimensions.height * scale;
 
   return (
-    <div style={{ width: '100%' }}>
+    <div className={`bookflip-shell bookflip-shell--${resolvedVariant}`} style={{ width: '100%' }}>
       <div ref={viewportRef} style={{ width: '100%', overflow: 'visible' }}>
         <div
           style={{
@@ -1055,7 +1224,7 @@ export default function BookFlip({
               height: dimensions.height,
               transform: `scale(${scale})`,
               transformOrigin: 'top center',
-              filter: `drop-shadow(0 28px 72px ${C.shadow}) drop-shadow(0 8px 18px rgba(28,18,8,0.12))`,
+              filter: `drop-shadow(0 32px 78px ${C.shadow}) drop-shadow(0 8px 18px rgba(0,0,0,0.32))`,
               lineHeight: 0,
             }}
           >
@@ -1069,9 +1238,9 @@ export default function BookFlip({
           <div
             style={{
               display: 'flex',
-              justifyContent: 'space-between',
+              justifyContent: 'center',
               alignItems: 'center',
-              gap: '12px',
+              gap: '16px',
               flexWrap: 'wrap',
               padding: '0 4px',
             }}
@@ -1080,20 +1249,20 @@ export default function BookFlip({
               type="button"
               onClick={goPrevious}
               disabled={!canGoPrevious}
+              aria-label="Previous page"
               style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: '0.72rem',
-                letterSpacing: '0.16em',
-                textTransform: 'uppercase',
-                borderRadius: '999px',
-                border: '1px solid rgba(28,18,8,0.12)',
-                background: '#fffdf9',
-                color: canGoPrevious ? '#1c1208' : '#a49682',
-                padding: '10px 14px',
+                width: 34,
+                height: 34,
+                borderRadius: '50%',
+                border: '1px solid rgba(200,168,74,0.32)',
+                background: 'rgba(20,14,6,0.82)',
+                color: canGoPrevious ? 'rgba(200,168,74,0.78)' : 'rgba(200,168,74,0.22)',
+                fontSize: '1rem',
+                lineHeight: 1,
                 cursor: canGoPrevious ? 'pointer' : 'not-allowed',
               }}
             >
-              ← Previous
+              ←
             </button>
 
             <div style={{ textAlign: 'center', flex: '1 1 220px' }}>
@@ -1103,7 +1272,7 @@ export default function BookFlip({
                   fontSize: '0.66rem',
                   letterSpacing: '0.16em',
                   textTransform: 'uppercase',
-                  color: '#8d7b62',
+                  color: 'rgba(200,168,74,0.46)',
                   marginBottom: '6px',
                 }}
               >
@@ -1111,10 +1280,10 @@ export default function BookFlip({
               </div>
               <div
                 style={{
-                  fontFamily: "'Manrope', sans-serif",
+                  fontFamily: "'IBM Plex Sans', sans-serif",
                   fontSize: '0.95rem',
-                  fontWeight: 700,
-                  color: '#1c1208',
+                  fontWeight: 600,
+                  color: 'rgba(245,234,214,0.82)',
                 }}
               >
                 {currentLabel}
@@ -1125,20 +1294,20 @@ export default function BookFlip({
               type="button"
               onClick={goNext}
               disabled={!canGoNext}
+              aria-label="Next page"
               style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: '0.72rem',
-                letterSpacing: '0.16em',
-                textTransform: 'uppercase',
-                borderRadius: '999px',
-                border: '1px solid rgba(196,79,40,0.22)',
-                background: '#fff0e9',
-                color: canGoNext ? '#c44f28' : '#d1b7ab',
-                padding: '10px 14px',
+                width: 34,
+                height: 34,
+                borderRadius: '50%',
+                border: '1px solid rgba(200,168,74,0.32)',
+                background: 'rgba(20,14,6,0.82)',
+                color: canGoNext ? 'rgba(200,168,74,0.78)' : 'rgba(200,168,74,0.22)',
+                fontSize: '1rem',
+                lineHeight: 1,
                 cursor: canGoNext ? 'pointer' : 'not-allowed',
               }}
             >
-              Next →
+              →
             </button>
           </div>
 
@@ -1146,12 +1315,14 @@ export default function BookFlip({
             style={{
               marginTop: '10px',
               textAlign: 'center',
-              fontFamily: "'Manrope', sans-serif",
-              fontSize: '0.82rem',
-              color: '#8d7b62',
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: '0.62rem',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'rgba(200,168,74,0.34)',
             }}
           >
-            Turn the pages with the buttons or your keyboard arrows.
+            Arrow keys turn the pages
           </p>
         </div>
       )}

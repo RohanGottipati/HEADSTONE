@@ -95,11 +95,12 @@ function BuildTools({ data, plan, planState, planError, buildPlan }) {
     >
       <div
         style={{
-          border: '1px solid rgba(28,18,8,0.12)',
-          borderRadius: '18px',
-          background: 'rgba(255,255,255,0.62)',
-          boxShadow: '0 18px 50px rgba(28,18,8,0.08)',
+          border: '1px solid rgba(200,168,74,0.22)',
+          borderRadius: '4px',
+          background: 'rgba(22,14,7,0.78)',
+          boxShadow: '0 24px 70px rgba(0,0,0,0.32)',
           padding: '22px',
+          backdropFilter: 'blur(12px)',
         }}
       >
         <div
@@ -119,7 +120,7 @@ function BuildTools({ data, plan, planState, planError, buildPlan }) {
                 fontSize: '0.66rem',
                 letterSpacing: '0.16em',
                 textTransform: 'uppercase',
-                color: '#8d7b62',
+                color: 'rgba(200,168,74,0.5)',
                 marginBottom: '8px',
               }}
             >
@@ -129,7 +130,7 @@ function BuildTools({ data, plan, planState, planError, buildPlan }) {
               style={{
                 fontFamily: "'Manrope', sans-serif",
                 fontSize: '1.15rem',
-                color: '#1c1208',
+                color: '#f4e7ce',
                 fontWeight: 800,
                 lineHeight: 1.2,
               }}
@@ -147,10 +148,10 @@ function BuildTools({ data, plan, planState, planError, buildPlan }) {
               fontSize: '0.7rem',
               letterSpacing: '0.16em',
               textTransform: 'uppercase',
-              color: '#fffaf4',
-              background: '#c44f28',
-              border: 'none',
-              borderRadius: '999px',
+              color: '#20170d',
+              background: '#c8a84a',
+              border: '1px solid rgba(200,168,74,0.62)',
+              borderRadius: '2px',
               padding: '10px 14px',
               cursor: isLoading ? 'wait' : 'pointer',
               opacity: isLoading ? 0.62 : 1,
@@ -165,7 +166,7 @@ function BuildTools({ data, plan, planState, planError, buildPlan }) {
             style={{
               fontFamily: "'Manrope', sans-serif",
               fontSize: '0.9rem',
-              color: '#8f3323',
+              color: '#f1c6b6',
               lineHeight: 1.6,
               marginBottom: '14px',
             }}
@@ -181,10 +182,10 @@ function BuildTools({ data, plan, planState, planError, buildPlan }) {
           rows={6}
           style={{
             width: '100%',
-            background: '#fffdf9',
-            color: '#1c1208',
-            border: '1px solid rgba(28,18,8,0.14)',
-            borderRadius: '12px',
+            background: 'rgba(10,7,4,0.72)',
+            color: '#f4e7ce',
+            border: '1px solid rgba(200,168,74,0.22)',
+            borderRadius: '3px',
             padding: '14px 16px',
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: '0.86rem',
@@ -252,14 +253,19 @@ export default function NotebookPage() {
 
   return (
     <div
+      className="notebook-page"
       style={{
         minHeight: '100vh',
         background:
-          'radial-gradient(circle at top, rgba(196,79,40,0.12), transparent 32%), linear-gradient(180deg, #fbf4eb 0%, #f8efe3 40%, #fefbf6 100%)',
+          'radial-gradient(ellipse at 50% 18%, rgba(200,168,74,0.1), transparent 42%), linear-gradient(180deg, #0e0c0a 0%, #130d07 52%, #090706 100%)',
         padding: '42px 24px 84px',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+      <div className="desk-surface notebook-page__desk" aria-hidden="true" />
+      <div className="candle-light" aria-hidden="true" />
+      <div style={{ maxWidth: '1120px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <header style={{ marginBottom: '30px', textAlign: 'center' }}>
           <p
             style={{
@@ -267,7 +273,7 @@ export default function NotebookPage() {
               fontSize: '0.68rem',
               letterSpacing: '0.22em',
               textTransform: 'uppercase',
-              color: '#8d7b62',
+              color: 'rgba(200,168,74,0.48)',
               marginBottom: '14px',
             }}
           >
@@ -279,7 +285,7 @@ export default function NotebookPage() {
               fontSize: 'clamp(2.1rem, 4vw, 3.6rem)',
               lineHeight: 1.04,
               letterSpacing: 0,
-              color: '#1c1208',
+              color: '#f4e7ce',
               fontWeight: 800,
               maxWidth: '820px',
               margin: '0 auto 16px',
@@ -293,7 +299,7 @@ export default function NotebookPage() {
               fontFamily: "'Manrope', sans-serif",
               fontSize: '1rem',
               lineHeight: 1.8,
-              color: '#6f5f49',
+              color: 'rgba(245,234,214,0.62)',
               maxWidth: '780px',
               margin: '0 auto',
               overflowWrap: 'anywhere',

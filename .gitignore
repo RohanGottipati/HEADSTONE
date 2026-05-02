@@ -2,3 +2,5 @@ node_modules/
 dist/
 .env
 .DS_Store
+backend/cache/assistant_id.txt
+frontend/.tmp_search_result.json
